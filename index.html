@@ -501,7 +501,10 @@
   .cat-pick button:active { transform: scale(.9); }
 
   /* In-app print/PDF report overlay (keeps a Back button so users aren't stranded) */
-  .pdf-overlay { position: fixed; inset: 0; z-index: 120; background: #fff; color: #1a2230; display: flex; flex-direction: column; animation: fadeIn .2s forwards; }
+  .pdf-overlay { position: fixed; inset: 0; z-index: 120; background: #fff; color: #1a2230; display: flex; flex-direction: column; animation: pdfIn .38s var(--ease) both; }
+  .pdf-overlay.closing { animation: pdfOut .32s var(--ease) forwards; }
+  @keyframes pdfIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: none; } }
+  @keyframes pdfOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(100%); } }
   .pdf-bar { flex: none; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 14px 10px; border-bottom: 1px solid #e3e7ee; background: #fff; }
   .pdf-bar .appbar-btn { width: 38px; height: 38px; border-radius: 11px; background: #f1f3f7; color: #1a2230; font-size: 22px; line-height: 1; display: grid; place-items: center; flex: none; }
   .pdf-bar .pdf-title { flex: 1; font-weight: 600; font-size: 15px; color: #162032; }
@@ -946,7 +949,7 @@ class Router {
     return this;
   }
   go(path){ if(('#'+path) === location.hash) this.resolve(); else location.hash = path; }
-  resolve(){
+  resolve(opts){
     let path = decodeURIComponent(location.hash.replace(/^#/, '')) || '/';
     let match = null, params = {}, def = null;
     for(const r of this.routes){
@@ -972,9 +975,13 @@ class Router {
       }
     }
     this.lastLevel = view.level;
-    this._render(view, dir);
+    // Remember the current location so a cold app launch can restore it.
+    try{ Storage.set('last_route', path); }catch(e){}
+    this._render(view, (opts && opts.instant) ? 'none' : dir, opts);
   }
-  _render(view, dir){
+  _render(view, dir, opts){
+    const keepScroll = !!(opts && opts.keepScroll);
+    const prevY = keepScroll ? window.scrollY : 0;
     if(this.current && this.current.unmount) try{ this.current.unmount(); }catch(e){}
     const node = view.build();
     const outlet = document.getElementById('outlet');
@@ -1001,7 +1008,8 @@ class Router {
       outlet.innerHTML = '';
       outlet.appendChild(node);
     }
-    window.scrollTo(0,0);
+    if(keepScroll) window.scrollTo(0, prevY);
+    else window.scrollTo(0,0);
     this.current = view;
     this.app.applyChrome(view);
     try{ view.mount(); }catch(e){ console.error(e); }
@@ -1383,8 +1391,10 @@ class MapView extends View {
 /* Currency converter */
 class CurrencyView extends View {
   constructor(app,p){ super(app,p); this.trip = app.store.get(p.id); this.title='Currency'; this.tab='convert'; this.showBack=true; this.back='/trip/'+p.id+'/overview';
-    this.from = Storage.get('conv_from') || (this.trip ? this.trip.baseCurrency : 'CHF');
-    this.to = Storage.get('conv_to') || (this.trip ? this.trip.homeCurrency : 'AED');
+    // Default the converter to this itinerary's own currencies (base → home),
+    // remembered per-trip so each itinerary keeps its own last pair.
+    this.from = Storage.get('conv_from_'+p.id) || (this.trip ? this.trip.baseCurrency : 'CHF');
+    this.to = Storage.get('conv_to_'+p.id) || (this.trip ? this.trip.homeCurrency : 'AED');
     this.amount = '100';
   }
   render(){
@@ -1412,13 +1422,13 @@ class CurrencyView extends View {
     this.rateEl=$('#convRate',this.el); this.fromEl=$('#convFrom',this.el); this.toEl=$('#convTo',this.el);
     const upd=()=>this._update();
     this.amtEl.addEventListener('input', ()=>{ this.amount=this.amtEl.value; upd(); });
-    this.fromEl.addEventListener('change', ()=>{ this.from=this.fromEl.value; Storage.set('conv_from',this.from); upd(); });
-    this.toEl.addEventListener('change', ()=>{ this.to=this.toEl.value; Storage.set('conv_to',this.to); upd(); });
+    this.fromEl.addEventListener('change', ()=>{ this.from=this.fromEl.value; Storage.set('conv_from_'+this.params.id,this.from); upd(); });
+    this.toEl.addEventListener('change', ()=>{ this.to=this.toEl.value; Storage.set('conv_to_'+this.params.id,this.to); upd(); });
     this._turn = 0;
     $('#convSwap',this.el).addEventListener('click', e=>{
       const f=this.from; this.from=this.to; this.to=f;
       this.fromEl.value=this.from; this.toEl.value=this.to;
-      Storage.set('conv_from',this.from); Storage.set('conv_to',this.to);
+      Storage.set('conv_from_'+this.params.id,this.from); Storage.set('conv_to_'+this.params.id,this.to);
       this._turn += 180; e.currentTarget.style.transform = 'rotate('+this._turn+'deg)';
       upd();
     });
@@ -1489,7 +1499,9 @@ class SpendView extends View {
       <button class="fab" id="addExpBtn" aria-label="Add expense">+</button>`;
   }
   mount(){
-    const refresh=()=>this.app.router.resolve();
+    // Adding/removing an expense re-renders in place with no transition and keeps the
+    // scroll position, so the list updates instantly instead of animating.
+    const refresh=()=>this.app.router.resolve({instant:true, keepScroll:true});
     // Portal the FAB out to <body>: a transformed ancestor (the swipe animation
     // on .view) becomes the containing block for position:fixed, which would make
     // the button shift during the transition. Keeping it on <body> keeps it steady.
@@ -1572,8 +1584,12 @@ class App {
   }
   start(){
     if(!location.hash){
-      const id=this.store.activeId();
-      location.hash = id ? ('/trip/'+id+'/overview') : '/trips';
+      // Restore wherever the user left off last; fall back to the itineraries list
+      // (not a specific trip) on a first launch or if the saved trip is gone.
+      let dest = Storage.get('last_route') || '';
+      const m = dest.match(/^\/trip\/([^/]+)/);
+      if(m && !this.store.get(decodeURIComponent(m[1]))) dest = '';
+      location.hash = dest || '/trips';
     }
     this.router.resolve();
     this.fx.refresh();
@@ -1766,8 +1782,11 @@ class App {
     const cleanup=()=>{
       if(closed) return; closed=true;
       window.removeEventListener('popstate', onPop);
-      overlay.remove();
-      if(!document.querySelector('.sheet') && !document.querySelector('.pdf-overlay')) document.body.classList.remove('no-scroll');
+      // Slide the report back down before removing it, mirroring the open animation.
+      overlay.classList.add('closing');
+      const done=()=>{ overlay.remove(); if(!document.querySelector('.sheet') && !document.querySelector('.pdf-overlay')) document.body.classList.remove('no-scroll'); };
+      overlay.addEventListener('animationend', done, { once:true });
+      setTimeout(done, 420);
     };
     // One history entry guards the overlay so the hardware/browser back gesture closes
     // it (and lands back in the app) instead of leaving the user stranded on the report.
