@@ -106,6 +106,8 @@ You are generating a JSON object describing a multi-day travel itinerary that wi
           "time":       "14:00",
           "label":      "Haneda Airport — clear customs & pick up Suica",
           "placeQuery": "Tokyo Haneda Airport",
+          "lat":        35.5494,            // decimal degrees — powers the in-app map
+          "lon":        139.7798,
           "note":       "JR ticket counter is left of arrivals — quicker than the kiosks",
           "kind":       "normal"
           // ← no stopInfo needed for an airport
@@ -137,6 +139,7 @@ You are generating a JSON object describing a multi-day travel itinerary that wi
 | `time` | `HH:MM` | 24-hour. |
 | `label` | string | The descriptive line. **This is where the trip's voice lives.** See examples. |
 | `placeQuery` | string | Google Maps search query. Specific names only. Omit for vague stops ("Dinner nearby"). |
+| `lat` / `lon` | number | **Decimal degrees** (e.g. `46.5197`, `6.6323`). Plot the stop on the in-app per-day map. Include for every stop with a real physical location; omit both for vague stops ("dinner nearby", "drive back"). See "Geolocation" below. |
 | `note` | string | Atmospheric / context line. One sentence. |
 | `kind` | enum | `"normal"` / `"highlight"` (red dot, ~1–3 per day) / `"sleep"` (last item of the day). |
 | `stopInfo` | object | **Only when it actually adds value.** See "When to use stopInfo" above. |
@@ -152,6 +155,31 @@ You are generating a JSON object describing a multi-day travel itinerary that wi
 ```
 
 Add **only** for paid attractions / experiences that exist as a bookable product (cable cars, cog railways, castle entries, guided tours, day cruises, museum tickets). **Skip** for restaurants, free sights, airport arrivals, hotel check-ins, transit.
+
+---
+
+## Geolocation — `lat` / `lon`
+
+The app draws a **per-day map**: every stop that has coordinates becomes a numbered pin, connected in time order. To make this work, give each physically-located stop a `lat` and `lon` in **decimal degrees**.
+
+```json
+{
+  "time": "09:45",
+  "label": "Chapel Bridge (Kapellbrücke) + Old Town",
+  "placeQuery": "Kapellbrucke Chapel Bridge Lucerne",
+  "lat": 47.0517,
+  "lon": 8.3076,
+  "note": "Europe's oldest covered wooden bridge, built 1333",
+  "kind": "highlight"
+}
+```
+
+Rules:
+- **Decimal degrees only.** `47.0517`, not `47°3'6"N`. Negative for South/West (`-33.8688`, `151.2093`).
+- **4–5 decimal places** is plenty (~1–10 m accuracy). Don't pad with fake precision.
+- **Be accurate.** Coordinates should point at the actual named place — the bridge, the summit station, the trailhead — not the town centre. If you're unsure of a precise spot, use the **town/landmark** coordinates rather than guessing wildly; a roughly-right pin beats a pin in the wrong country.
+- **Omit both** `lat` and `lon` for vague stops with no fixed point ("dinner nearby", "scenic drive back", "free afternoon"). A day with no located stops simply shows no detailed map — that's fine.
+- `lat`/`lon` and `placeQuery` are independent: `placeQuery` opens Google Maps, `lat`/`lon` draws the in-app pin. Provide both when you can.
 
 ---
 
@@ -241,12 +269,14 @@ These are the most common mistakes AIs make when generating trip JSON. Don't.
       "time": "08:30",
       "label": "Drive down to Montreux station — board the cog railway",
       "placeQuery": "Montreux Railway Station Switzerland",
+      "lat": 46.4337, "lon": 6.9106,
       "kind": "normal"
     },
     {
       "time": "09:24",
       "label": "Rochers-de-Naye — 50-min cog railway to 2,042m",
       "placeQuery": "Rochers-de-Naye Switzerland",
+      "lat": 46.4318, "lon": 6.9761,
       "note": "Sweeping panorama over Lake Geneva to the Alps · climbs 1,600m",
       "kind": "highlight",
       "stopInfo": { "tip": "Sit on the right going up for lake views" },
@@ -256,6 +286,7 @@ These are the most common mistakes AIs make when generating trip JSON. Don't.
       "time": "10:30",
       "label": "Marmot Paradise + summit ridge walks",
       "placeQuery": "Marmot Paradise Rochers-de-Naye",
+      "lat": 46.4322, "lon": 6.9772,
       "note": "Marmots included with your ticket · La Rambertia alpine garden opens Jun–Sep",
       "kind": "highlight"
     },
@@ -263,6 +294,7 @@ These are the most common mistakes AIs make when generating trip JSON. Don't.
       "time": "14:00",
       "label": "Start alpine scenic drive: Villars-sur-Ollon",
       "placeQuery": "Villars-sur-Ollon Switzerland",
+      "lat": 46.2978, "lon": 7.0553,
       "note": "Mountain road atmosphere — better than a long cruise if you enjoy driving",
       "kind": "highlight"
     },
@@ -270,12 +302,14 @@ These are the most common mistakes AIs make when generating trip JSON. Don't.
       "time": "16:30",
       "label": "Gstaad — coffee stop + short village walk",
       "placeQuery": "Gstaad Switzerland",
+      "lat": 46.4722, "lon": 7.2888,
       "kind": "normal"
     },
     {
       "time": "18:15",
       "label": "Gruyères — medieval village evening stop",
       "placeQuery": "Gruyeres Switzerland",
+      "lat": 46.5841, "lon": 7.0827,
       "note": "Short walk, photos, dinner nearby",
       "kind": "highlight"
     },
@@ -293,6 +327,7 @@ Note how:
 - Only one stop has `stopInfo`, and it's a single actionable tip.
 - Labels include specific details (50-min cog, 2,042m, "scenic drive: Villars-sur-Ollon").
 - Notes add atmosphere ("Mountain road atmosphere — better than a long cruise…").
+- Every fixed location has `lat`/`lon`; the final "scenic drive back" stop **omits** them (no single point).
 - Last stop is `kind: "sleep"`.
 
 ### Example B — a richly-labelled day (city + nature)
@@ -307,12 +342,14 @@ Note how:
       "time": "08:00",
       "label": "Lungern Viewpoint — lake-in-valley panorama",
       "placeQuery": "Lungern Viewpoint Switzerland",
+      "lat": 46.7872, "lon": 8.1588,
       "kind": "highlight"
     },
     {
       "time": "09:45",
       "label": "Chapel Bridge (Kapellbrücke) + Old Town",
       "placeQuery": "Kapellbrucke Chapel Bridge Lucerne",
+      "lat": 47.0517, "lon": 8.3076,
       "note": "Europe's oldest covered wooden bridge, built 1333",
       "kind": "highlight"
     },
@@ -320,6 +357,7 @@ Note how:
       "time": "14:30",
       "label": "Mount Pilatus — cable car from Kriens (2,132m)",
       "placeQuery": "Mount Pilatus Switzerland",
+      "lat": 46.9790, "lon": 8.2525,
       "note": "World's steepest cogwheel railway option",
       "kind": "highlight",
       "stopInfo": {
@@ -355,6 +393,7 @@ Note the variety: **most stops are minimal**, only the Pilatus highlight earns a
 - [ ] `kind: "highlight"` is on 1–3 stops per day, not every stop
 - [ ] Last stop of the day is `kind: "sleep"`
 - [ ] `placeQuery` is a specific Google-searchable name, omitted when stop is vague
+- [ ] `lat`/`lon` in **decimal degrees** on every fixed-location stop; both omitted for vague stops; coordinates point at the actual place
 - [ ] `bookLink` only on paid attractions; only Klook URLs
 - [ ] `tags` use emoji + short label (no "Day 1" / "Travel" generics)
 - [ ] Dates ISO, times 24h, days sorted, timeline within each day sorted by time
