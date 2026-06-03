@@ -6,7 +6,7 @@
    - Everything else (third-party links etc.): pass-through.
    Bump SHELL_CACHE version when you change the HTML/CSS/JS to force clients to refresh.
 */
-const SHELL_CACHE = 'swiss-shell-v55';
+const SHELL_CACHE = 'swiss-shell-v57';
 const RUNTIME_CACHE = 'swiss-runtime-v1';
 
 const SHELL_ASSETS = [
