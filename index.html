@@ -9,6 +9,15 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#162032" id="themeColorMeta">
 <script>
+  // Local-date formatter (YYYY-MM-DD) — avoids the UTC shift of toISOString()
+  // that rolled trip dates back a day in positive-offset timezones (e.g. Dubai).
+  window.isoLocal = function(d){
+    d = d || new Date();
+    const y = d.getFullYear(),
+          m = String(d.getMonth() + 1).padStart(2, '0'),
+          day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  };
   // Apply persisted theme + language before paint to avoid FOUC
   (function(){
     try {
@@ -1223,9 +1232,14 @@
     display: none !important;
   }
   .hero h1 { font-size: clamp(40px, 10vw, 72px); }
-  /* No-trip empty state: hide section header + spend tracker */
+  /* No-trip empty state: hide section header, spend tracker, and the
+     trip-scoped controls (search + expand/collapse/today) that have nothing to act on */
   body.no-trip .section-header,
-  body.no-trip #spendCard {
+  body.no-trip #spendCard,
+  body.no-trip .trip-search,
+  body.no-trip #expandAllBtn,
+  body.no-trip #collapseAllBtn,
+  body.no-trip #todayBtn {
     display: none !important;
   }
   /* Bigger empty-state card */
@@ -2928,7 +2942,7 @@
     spending_label:'💸 Spending', trip_money_tracker:'Trip Money Tracker',
     spend_help:'Tap to log expenses · saved on this device',
     of_budget:'% of budget',
-    add_btn:'+ Add', export_pdf_btn:'📄 Export PDF',
+    add_btn:'+ Add', export_pdf_btn:'Export PDF',
     no_expenses:'No expenses logged yet — add your first above ↑',
     note_placeholder:'Note (optional, e.g. "Pilatus lunch")',
     cat_tickets:'🎟 Tickets / Attractions', cat_food:'🍽 Restaurants & Cafés',
@@ -2991,7 +3005,7 @@
     spending_label:'💸 الإنفاق', trip_money_tracker:'متعقب أموال الرحلة',
     spend_help:'انقر لتسجيل النفقات · محفوظة على هذا الجهاز',
     of_budget:'٪ من الميزانية',
-    add_btn:'+ إضافة', export_pdf_btn:'📄 تصدير PDF',
+    add_btn:'+ إضافة', export_pdf_btn:'تصدير PDF',
     no_expenses:'لم يتم تسجيل أي نفقات بعد — أضف أولها بالأعلى ↑',
     note_placeholder:'ملاحظة (اختياري، مثل "غداء بيلاتوس")',
     cat_tickets:'🎟 التذاكر / المعالم', cat_food:'🍽 المطاعم والمقاهي',
@@ -3200,7 +3214,7 @@
       const routeLink = card.querySelector('.day-actions a.maps-btn');
       const dayObj = {
         title: titleEl ? titleEl.childNodes[0].textContent.trim() : 'Day '+(di+1),
-        date: d.toISOString().slice(0,10),
+        date: window.isoLocal(d),
         town: '',
         tags: Array.from(tagEls).map(t => t.textContent.trim()),
         routeMapUrl: routeLink ? (routeLink.getAttribute('href')||'') : '',
@@ -3238,7 +3252,7 @@
       startDate: '2026-05-26', endDate: '2026-06-02',
       travelers: 2, tagline: '🏔 Alps + Lakes',
       baseCurrency: 'CHF', homeCurrency: 'AED',
-      budget: 11600, // AED equivalent of ~2484 CHF at fallback rate
+      budget: 2484, // CHF (base currency); v4 migration converts to home currency (AED)
       days
     };
   }
@@ -3304,6 +3318,33 @@
       });
       saveTrips(r);
       store.set('migrated_v4', '1');
+    }
+    // v5: repair Switzerland day dates that were stored a day early by the old
+    // toISOString() extraction. Recompute each day's date from startDate + index.
+    if(store.get('migrated_v5') !== '1'){
+      const r = getTrips();
+      const sw = r[SWITZ_ID];
+      if(sw && sw.startDate && Array.isArray(sw.days)){
+        sw.days.forEach((day, i) => {
+          const base = new Date(sw.startDate + 'T00:00:00');
+          base.setDate(base.getDate() + i);
+          day.date = window.isoLocal(base);
+        });
+        saveTrips(r);
+      }
+      store.set('migrated_v5', '1');
+    }
+    // v6: repair Switzerland budget that was double-converted by v4 (the extraction
+    // stored 11600 AED, then v4 re-multiplied it to 54172). Only touch the exact
+    // corrupted value so a user-chosen budget is never clobbered.
+    if(store.get('migrated_v6') !== '1'){
+      const r = getTrips();
+      const sw = r[SWITZ_ID];
+      if(sw && sw.budget === 54172){
+        sw.budget = 11600;
+        saveTrips(r);
+      }
+      store.set('migrated_v6', '1');
     }
   }
 
@@ -4307,7 +4348,7 @@
   const $  = id => document.getElementById(id);
   const $$ = sel => Array.prototype.slice.call(document.querySelectorAll(sel));
   const days = () => $$('details.day-card');
-  const todayKey = () => { const d = new Date(); return d.toISOString().slice(0,10); };
+  const todayKey = () => window.isoLocal();
   const tripDay = () => {
     const ms = Date.now() - TRIP_START.getTime();
     return Math.floor(ms / 86400000); // 0 = day 1 of trip; -1 = day before
@@ -4531,9 +4572,9 @@
     return '🌡';
   }
   async function loadWeather(){
-    const startISO = TRIP_START.toISOString().slice(0,10);
+    const startISO = window.isoLocal(TRIP_START);
     const endDate = new Date(TRIP_START); endDate.setDate(endDate.getDate() + TRIP_DAYS - 1);
-    const endISO = endDate.toISOString().slice(0,10);
+    const endISO = window.isoLocal(endDate);
     // forecast horizon ~16 days; if trip > 16d out, this returns nothing — handle gracefully
     for(let i=0; i<DAY_META.length; i++){
       const m = DAY_META[i];
@@ -4585,7 +4626,7 @@
   }
   function isoForDay(i){
     const d = new Date(TRIP_START); d.setDate(d.getDate() + i);
-    return d.toISOString().slice(0,10);
+    return window.isoLocal(d);
   }
 
   // ── State persistence (which days are open) ───────────────
