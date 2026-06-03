@@ -828,7 +828,19 @@ class Trip {
 
 /* ─── TripStore: load/seed/persist ─── */
 class TripStore {
-  constructor(){ this.trips = Storage.getJSON('trips_v1', null) || {}; this._seed(); }
+  constructor(){ this.trips = Storage.getJSON('trips_v1', null) || {}; this._seed(); this._repairIds(); }
+  /* One-time repair: a past edit bug could re-slug a trip's `id` so it no longer
+     matched its storage key (e.g. key "switzerland" holding id "switzerland-2"),
+     which broke routes/expenses/checklist. The key is authoritative, so re-sync
+     each trip's `id` back to its key. */
+  _repairIds(){
+    let dirty = false;
+    for(const key of Object.keys(this.trips)){
+      const t = this.trips[key];
+      if(t && typeof t === 'object' && t.id !== key){ t.id = key; dirty = true; }
+    }
+    if(dirty) this.save();
+  }
   _seed(){
     if(Object.keys(this.trips).length === 0){
       try {
@@ -1942,6 +1954,7 @@ class App {
       try{
         if(editing){
           const next=Object.assign({}, d, this.store.normalizeTrip(Object.assign({}, d, meta, { id:trip.id, days:d.days })));
+          next.id = trip.id; // keep the same id so expenses/checklist/routes stay linked (normalizeTrip can re-slug)
           this.store.update(trip.id, next);
           ui.close(); toast('Trip updated'); onDone && onDone(trip.id);
         } else {
