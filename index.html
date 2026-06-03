@@ -500,6 +500,32 @@
   .cat-pick button.sel { border-color: var(--red); background: color-mix(in srgb, var(--red) 12%, var(--card)); }
   .cat-pick button:active { transform: scale(.9); }
 
+  /* In-app print/PDF report overlay (keeps a Back button so users aren't stranded) */
+  .pdf-overlay { position: fixed; inset: 0; z-index: 120; background: #fff; color: #1a2230; display: flex; flex-direction: column; animation: fadeIn .2s forwards; }
+  .pdf-bar { flex: none; display: flex; align-items: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 14px 10px; border-bottom: 1px solid #e3e7ee; background: #fff; }
+  .pdf-bar .appbar-btn { width: 38px; height: 38px; border-radius: 11px; background: #f1f3f7; color: #1a2230; font-size: 22px; line-height: 1; display: grid; place-items: center; flex: none; }
+  .pdf-bar .pdf-title { flex: 1; font-weight: 600; font-size: 15px; color: #162032; }
+  .pdf-bar .pdf-print { display: inline-flex; align-items: center; gap: 6px; background: #162032; color: #fff; padding: 9px 14px; border-radius: 10px; font-weight: 600; font-size: 13px; font-family: inherit; }
+  .pdf-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .pdf-doc { font: 13px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1a2230; margin: 0 auto; max-width: 760px; padding: 26px 22px 64px; }
+  .pdf-doc h1 { font-family: inherit; color: #162032; font-size: 22px; font-weight: 700; line-height: 1.2; margin: 0 0 2px; }
+  .pdf-doc .sub { color: #667; margin: 0 0 18px; font-size: 12px; }
+  .pdf-doc .tot { font-size: 30px; font-weight: 700; color: #162032; margin: 6px 0 2px; }
+  .pdf-doc .meta { color: #667; font-size: 12px; margin-bottom: 20px; }
+  .pdf-doc h2 { font-family: inherit; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: #8a93a3; margin: 22px 0 8px; border-bottom: 1px solid #e3e7ee; padding-bottom: 6px; }
+  .pdf-doc table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .pdf-doc th { text-align: left; color: #8a93a3; font-weight: 600; padding: 6px 8px; border-bottom: 1px solid #e3e7ee; }
+  .pdf-doc td { padding: 6px 8px; border-bottom: 1px solid #eef1f5; vertical-align: top; }
+  .pdf-doc .r { text-align: right; white-space: nowrap; }
+  .pdf-doc tfoot td { font-weight: 700; border-top: 2px solid #cbd2dd; border-bottom: none; }
+  @media print {
+    body:has(.pdf-overlay) > *:not(.pdf-overlay) { display: none !important; }
+    .pdf-overlay { position: static !important; }
+    .pdf-bar { display: none !important; }
+    .pdf-scroll { overflow: visible !important; }
+    .pdf-doc { margin: 0; padding: 0; max-width: none; }
+  }
+
   /* toast */
   .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 22px); z-index: 100; background: var(--navy); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 13px; box-shadow: var(--shadow-pop); animation: toastIn .3s var(--ease) both; }
   [data-theme="dark"] .toast { background: var(--card); border: 1px solid var(--border); color: var(--text); }
@@ -952,14 +978,19 @@ class Router {
     if(this.current && this.current.unmount) try{ this.current.unmount(); }catch(e){}
     const node = view.build();
     const outlet = document.getElementById('outlet');
-    const oldNode = outlet.firstElementChild;
+    // Flush any in-flight transition before starting a new one. Rapid taps can leave
+    // several view nodes mid-animation in the outlet; collapse them to just the most
+    // recent (the real current view) so pages never stack/mix on top of each other.
+    const kids = [...outlet.children];
+    const oldNode = kids.length ? kids[kids.length - 1] : null;
+    for(const k of kids){ if(k !== oldNode) k.remove(); }
+    if(oldNode) oldNode.classList.remove('view-enter-fwd','view-enter-back','view-leave-fwd','view-leave-back','view-anim-fade');
     const swipe = (dir==='fwd' || dir==='back') && oldNode;
     if(swipe){
       // Two-phase swipe: old view slides off while the new view slides in.
       outlet.classList.add('swiping');
-      oldNode.classList.remove('view-enter-fwd','view-enter-back','view-anim-fade');
       oldNode.classList.add(dir==='fwd' ? 'view-leave-fwd' : 'view-leave-back');
-      const drop = ()=>{ if(oldNode.parentNode) oldNode.remove(); outlet.classList.remove('swiping'); };
+      const drop = ()=>{ if(oldNode.parentNode) oldNode.remove(); if(outlet.children.length <= 1) outlet.classList.remove('swiping'); };
       oldNode.addEventListener('animationend', drop, { once:true });
       setTimeout(drop, 650);
       node.classList.add(dir==='fwd' ? 'view-enter-fwd' : 'view-enter-back');
@@ -1705,18 +1736,7 @@ class App {
       return `<tr><td>${esc(this.fmtDateShort(e.date))}</td><td>${esc(l.label)}</td><td>${esc(e.note||'')}</td><td class="r">${orig}</td><td class="r">${esc(fmtMoney(home,hc))}</td></tr>`;
     }).join('');
     const today=this.ddmmyyyy(new Date());
-    const html=`<!doctype html><html><head><meta charset="utf-8"><title>${esc(trip.name)} — Spending</title>
-      <style>
-        *{box-sizing:border-box} body{font:13px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1a2230;margin:32px;}
-        h1{font-size:22px;margin:0 0 2px} .sub{color:#667;margin:0 0 18px;font-size:12px}
-        .tot{font-size:30px;font-weight:700;color:#162032;margin:6px 0 2px}
-        .meta{color:#667;font-size:12px;margin-bottom:20px}
-        h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#8a93a3;margin:22px 0 8px;border-bottom:1px solid #e3e7ee;padding-bottom:6px}
-        table{width:100%;border-collapse:collapse;font-size:12.5px} th{text-align:left;color:#8a93a3;font-weight:600;padding:6px 8px;border-bottom:1px solid #e3e7ee}
-        td{padding:6px 8px;border-bottom:1px solid #eef1f5;vertical-align:top} .r{text-align:right;white-space:nowrap}
-        tfoot td{font-weight:700;border-top:2px solid #cbd2dd;border-bottom:none}
-        @media print{body{margin:14mm}}
-      </style></head><body>
+    const report=`<div class="pdf-doc">
       <h1>${esc(trip.name)}</h1>
       <p class="sub">${esc(this.fmtRange(trip))} · Spending report</p>
       <div class="tot">${esc(fmtMoney(spent,hc))}</div>
@@ -1728,13 +1748,35 @@ class App {
         <thead><tr><th>Date</th><th>Category</th><th>Note</th><th class="r">Paid</th><th class="r">${esc(hc)}</th></tr></thead>
         <tbody>${rows}</tbody>
         <tfoot><tr><td colspan="4">Total</td><td class="r">${esc(fmtMoney(spent,hc))}</td></tr></tfoot>
-      </table>
-      </body></html>`;
-    const w=window.open('','_blank');
-    if(!w){ toast('Allow pop-ups to export the PDF'); return; }
-    w.document.open(); w.document.write(html); w.document.close();
-    w.focus();
-    setTimeout(()=>{ try{ w.print(); }catch(e){} }, 350);
+      </table></div>`;
+    // Render the report inside the app as a full-screen overlay with a Back button,
+    // so the user is never stranded (a popup window has no in-app way back, especially
+    // in a standalone PWA). The toolbar's Save button triggers the browser print dialog.
+    const overlay=h('<div class="pdf-overlay"></div>');
+    overlay.innerHTML=`
+      <div class="pdf-bar">
+        <button class="appbar-btn" id="pdfBack" aria-label="Back">‹</button>
+        <span class="pdf-title">Spending report</span>
+        <button class="pdf-print" id="pdfPrint">${svg('file')} Save as PDF</button>
+      </div>
+      <div class="pdf-scroll">${report}</div>`;
+    document.body.appendChild(overlay);
+    document.body.classList.add('no-scroll');
+    let closed=false;
+    const cleanup=()=>{
+      if(closed) return; closed=true;
+      window.removeEventListener('popstate', onPop);
+      overlay.remove();
+      if(!document.querySelector('.sheet') && !document.querySelector('.pdf-overlay')) document.body.classList.remove('no-scroll');
+    };
+    // One history entry guards the overlay so the hardware/browser back gesture closes
+    // it (and lands back in the app) instead of leaving the user stranded on the report.
+    const onPop=()=>cleanup();
+    history.pushState({pdf:1}, '');
+    window.addEventListener('popstate', onPop);
+    const closeBtn=()=>{ if(history.state && history.state.pdf) history.back(); else cleanup(); };
+    overlay.querySelector('#pdfBack').addEventListener('click', closeBtn);
+    overlay.querySelector('#pdfPrint').addEventListener('click', ()=>{ try{ window.print(); }catch(e){} });
   }
   /* Sort expenses newest first by date, then by entry time. */
   _expCmp(a,b){ const da=a.date||'', db=b.date||''; if(da!==db) return db<da?-1:1; return (b.ts||0)-(a.ts||0); }
