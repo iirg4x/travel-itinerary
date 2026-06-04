@@ -1,12 +1,37 @@
 # AI Trip JSON — Generation Guide
 
-Copy this whole file into **Claude / ChatGPT / Gemini / any LLM**, paste your rough plan below it, and ask for one JSON object. Then paste the result into the app's **📁 Import JSON** dialog.
+This guide turns any LLM (**Claude / ChatGPT / Gemini**) into a trip-planning assistant for the **Travel Itinerary** app. Paste this whole file into the chat, tell the AI about your trip, and it will **(1)** interview you to fill any gaps, then **(2)** output one JSON object you paste into the app's **📁 Import JSON** dialog.
 
 ---
 
-## Your task as the AI
+## About the app you're generating for
 
-You are generating a JSON object describing a multi-day travel itinerary that will be imported into a travel PWA. The user gives you a rough plan (destination, dates, traveller count, interests). You produce **one valid JSON object** matching the schema below — and **nothing else**. No markdown fences, no commentary, no leading or trailing text.
+The Travel Itinerary app is an offline-capable PWA that installs to the home screen. Here's what the JSON powers, so you know what you're writing for:
+
+- **Overview** — a hero countdown to the trip, a "today / up next" card, a spending-budget donut, a **"Your Hotels"** section (`hotels`), optional **"Book in Advance"** chips (`bookings`), and an optional **Pre-Departure** checklist tile (`prep`).
+- **Day by Day** — every entry in `days` becomes a card; tapping one opens that day's timeline of stops, each with a time, label, optional note, info pills, a map pin and a booking link.
+- **Per-day map** — every stop with `lat`/`lon` becomes a numbered pin, connected in time order.
+- **Spending tracker** — multi-currency expense log totalled in `homeCurrency` and charted by category; driven by `baseCurrency` / `homeCurrency` / `budget`.
+- **Currency converter** — live FX between `baseCurrency` and `homeCurrency`.
+- **In-app editing** — the user can edit any day, and can paste JSON for **a single day** via that day's **"Edit JSON"** button. So you may hand back either a whole-trip object **or** just one day object — see **"Single-day JSON"** near the end.
+
+---
+
+## Your task as the AI — a two-phase flow
+
+**Phase 1 — interview.** Don't guess at a plan from thin information. If the user's request doesn't already answer the questions below, **ask them first** (batch several questions into one message so it's quick, and skip anything they've already told you):
+
+1. **Trip type / vibe** — relaxed, packed sightseeing, road trip, food crawl, hiking/outdoors, city break, family-with-kids, romantic, budget backpacking…?
+2. **Destination(s)** and the rough route or order to visit them.
+3. **Dates** — exact dates, or a start date plus number of days.
+4. **Travellers** — how many, plus any kids, mobility, or dietary constraints.
+5. **Pace** — how many stops per day feels right; are early starts OK?
+6. **Interests** — museums, nature, nightlife, shopping, history, food, photography…
+7. **Budget & currency** — the currency they'll spend in (`baseCurrency`), their home/bank currency (`homeCurrency`), and any overall budget.
+8. **Hotels** — do they already have hotels booked (get the names + areas), or should you **suggest hotel options** for each location? Either way you'll fill the `hotels` field.
+9. **Extras (optional)** — would they like a **pre-departure checklist** (`prep`: documents, packing, apps) and a **"book in advance"** list (`bookings`)? These are worth adding for international or activity-heavy trips; skip them for a simple weekend.
+
+**Phase 2 — generate.** Once you have enough to plan well, stop asking and output **one valid JSON object** matching the schema below — and **nothing else**. No markdown fences, no commentary, no leading or trailing text. The JSON *is* the entire final message.
 
 ---
 
@@ -93,14 +118,43 @@ You are generating a JSON object describing a multi-day travel itinerary that wi
   "homeCurrency":  "AED",              // ISO code, your bank's currency
   "budget":        12000,              // in homeCurrency, optional
 
+  // ── HOTELS (optional) — render as cards in the Overview "Your Hotels" section ──
+  "hotels": [
+    {
+      "nights": "Nights 1–3 · 15–17 Oct",   // freeform label (which nights / dates)
+      "name":   "Park Hyatt Tokyo",         // required
+      "loc":    "Shinjuku, Tokyo",          // area / city — optional
+      "url":    "https://www.google.com/travel/hotels/Park%20Hyatt%20Tokyo" // booking/info link — optional
+    }
+  ],
+
+  // ── BOOKINGS (optional) — "Book in Advance" chips on the Overview ──
+  "bookings": [
+    { "ico": "🏔", "label": "Mt Fuji day tour", "url": "https://www.klook.com/search/?query=mount%20fuji" }
+  ],
+
+  // ── PREP (optional) — powers the "Pre-Departure" packing & documents checklist ──
+  "prep": [
+    {
+      "title": "📄 Documents",
+      "items": [
+        { "id": "doc-passport", "text": "Passport valid 6+ months", "hint": "check expiry vs return date" }
+      ]
+    }
+  ],
+
   // ── DAYS ──
   "days": [
     {
       "title":        "Tokyo Arrival",       // required, descriptive
       "date":         "2026-10-15",          // required
       "town":         "Tokyo",
+      "lat":          35.6762,               // optional day-centre pin (whole-trip map)
+      "lon":          139.6503,
       "tags":         ["🛫 Arrival", "🏨 Park Hyatt"],
       "routeMapUrl":  "",                    // leave blank — auto-built from stops
+      "checklist":    ["Pick up Suica card", "Buy pocket wifi at airport"], // optional per-day to-dos
+      "costs":        [ { "n": "Airport express", "c": 3000 } ],            // optional, per-person, in baseCurrency
       "timeline": [
         {
           "time":       "14:00",
@@ -128,12 +182,23 @@ You are generating a JSON object describing a multi-day travel itinerary that wi
 | `tagline` | string | Hero pill. Emoji + short. |
 | `baseCurrency` / `homeCurrency` | ISO 4217 | E.g. `JPY` / `AED`. |
 | `budget` | number | In `homeCurrency`. Tracker shows % used. Omit for no cap. |
+| `hotels` | array | Optional. Cards in the Overview "Your Hotels" section. See "Hotels" below. |
+| `bookings` | array | Optional. "Book in Advance" chips on the Overview. See "Bookings & Prep" below. |
+| `prep` | array | Optional. Powers the "Pre-Departure" packing/documents checklist. See "Bookings & Prep" below. |
+| **Hotel** | | |
+| `name` | string | **Required.** Hotel name. |
+| `nights` | string | Freeform — which nights/dates this covers ("Nights 1–3 · 15–17 Oct"). Optional. |
+| `loc` | string | Area / city. Optional. |
+| `url` | string | Booking or info link (`http(s)://…`). Optional — a "Book / View" button. |
 | **Day** | | |
 | `title` | string | What's the day about? Specific not generic. |
 | `date` | `YYYY-MM-DD` | |
 | `town` | string | Optional. |
+| `lat` / `lon` | number | Optional **day-centre** pin (decimal degrees) for the whole-trip map. Falls back to the day's first located stop if omitted. |
 | `tags` | string[] | Emoji + short label each. |
 | `routeMapUrl` | string | **Leave blank** — auto-built from stops' `placeQuery`. Only override if you have a specific waypoint sequence. |
+| `checklist` | string[] | Optional per-day to-dos (a tickable "Checklist" block on the day). Device-only state. |
+| `costs` | `{n,c}[]` | Optional paid items for the day. `n` = name, `c` = **per-person** cost in `baseCurrency`. App multiplies by `travelers` and shows a `homeCurrency` estimate. `[]` (empty) shows "No paid attractions today". |
 | `timeline` | array | **Sorted by time ascending.** |
 | **Stop** | | |
 | `time` | `HH:MM` | 24-hour. |
@@ -155,6 +220,64 @@ You are generating a JSON object describing a multi-day travel itinerary that wi
 ```
 
 Add **only** for paid attractions / experiences that exist as a bookable product (cable cars, cog railways, castle entries, guided tours, day cruises, museum tickets). **Skip** for restaurants, free sights, airport arrivals, hotel check-ins, transit.
+
+---
+
+## Hotels — the Overview "Your Hotels" cards
+
+The `hotels` array drives the Overview's hotel cards. Two situations:
+
+- **The traveller already has hotels** → ask for the names + areas (and dates if they have them) and transcribe them into `hotels`. Don't invent links you can't trust; use a Google-Hotels or maps search URL if no direct booking link was given, or omit `url`.
+- **The traveller wants suggestions** → propose 1 hotel per location (or per leg of the trip), matched to their vibe and budget, with a one-line `loc`. Set `url` to a search link they can act on, e.g. `https://www.google.com/travel/hotels/<hotel%20name>` or a Booking/Kayak search. Don't fabricate exact prices or a specific room booking.
+
+```json
+"hotels": [
+  { "nights": "Nights 1–3 · 15–17 Oct", "name": "Park Hyatt Tokyo", "loc": "Shinjuku, Tokyo",
+    "url": "https://www.google.com/travel/hotels/Park%20Hyatt%20Tokyo" },
+  { "nights": "Nights 4–6 · 18–20 Oct", "name": "Hoshinoya Kyoto", "loc": "Arashiyama, Kyoto" }
+]
+```
+
+Order hotels by stay sequence. `name` is the only required field — `nights`, `loc`, `url` are all optional and the card adapts to whatever you provide. Keep `tags` like `"🏨 Park Hyatt"` on the matching day so the day cards and hotel list line up.
+
+---
+
+## Bookings & Prep — Overview chips and the Pre-Departure checklist
+
+Both are **optional**, trip-level arrays. Add them when the trip has things worth booking ahead or packing for; omit them entirely for a simple trip (the app just hides those sections).
+
+### `bookings` — "Book in Advance" chips
+
+A short row of tappable chips on the Overview for the experiences worth reserving before arrival (cable cars, summit railways, popular tours, day cruises). Mirror the `bookLink`s you used in the timeline so the traveller has a one-tap list.
+
+```json
+"bookings": [
+  { "ico": "🏔", "label": "Mt Fuji day tour", "url": "https://www.klook.com/search/?query=mount%20fuji" },
+  { "ico": "⛩", "label": "TeamLab tickets",   "url": "https://www.klook.com/search/?query=teamlab%20tokyo" }
+]
+```
+
+- `label` and `url` are required (`http(s)://…`, Klook search URLs preferred, same as `bookLink`); `ico` is one optional emoji (defaults to 🎟).
+- Keep it to the genuinely book-ahead items — 4–8 chips, not every paid stop.
+
+### `prep` — the Pre-Departure checklist
+
+Powers a grouped, tickable packing & documents list reached from an Overview tile. Organise into a handful of titled sections (Documents, Money, Pre-Book, Pack, Apps, Flight Day…), each with `items`. Ticks are saved per-device.
+
+```json
+"prep": [
+  { "title": "📄 Documents", "items": [
+    { "id": "doc-passport", "text": "Passport valid 6+ months", "hint": "check expiry vs return date" },
+    { "id": "doc-visa", "text": "Visa / eTA approved", "hint": "" }
+  ]},
+  { "title": "🎒 Pack", "items": [
+    { "id": "pack-adapter", "text": "Type A/B power adapter", "hint": "Japan is 100V" }
+  ]}
+]
+```
+
+- Each section needs a `title` and an `items` array; each item needs `text`. `id` should be a short stable slug (used to remember the tick — auto-generated if omitted); `hint` is an optional sub-line of context.
+- Tailor it to the actual trip: weather-appropriate clothing, the destination's plug type, local emergency numbers, any visa/insurance rules, and the specific attractions to pre-book.
 
 ---
 
@@ -382,6 +505,29 @@ Note the variety: **most stops are minimal**, only the Pilatus highlight earns a
 
 ---
 
+## Single-day JSON (editing one day in-app)
+
+The app lets the user open any day and tap **"Edit JSON"** to replace just that one day. So if they only want to add or rework a single day, **return one *day* object** — not a whole trip:
+
+```json
+{
+  "title": "Kyoto — Fushimi Inari at dawn",
+  "date": "2026-10-18",
+  "town": "Kyoto",
+  "tags": ["⛩ Fushimi Inari", "🍵 Gion"],
+  "timeline": [
+    { "time": "06:30", "label": "Fushimi Inari — climb the torii gates before the crowds",
+      "placeQuery": "Fushimi Inari Taisha", "lat": 34.9671, "lon": 135.7727,
+      "note": "Thousands of vermilion gates — the lower loop takes ~45 min", "kind": "highlight" },
+    { "time": "21:00", "label": "Back to the ryokan", "kind": "sleep" }
+  ]
+}
+```
+
+A day object follows the **Day** schema exactly (the object inside the `days` array): `title` and `date` required, `timeline` sorted by time, last stop `kind: "sleep"`. The same voice and `stopInfo` rules apply. Make clear in your reply which mode you've used — whole trip vs. single day — so the user pastes it into the right dialog (📁 Import JSON for a whole trip, a day's **Edit JSON** for one day).
+
+---
+
 ## Pre-flight checklist before you return JSON
 
 - [ ] Every label is **specific** — names places, includes useful detail (elevation, distance, era, signature dish)
@@ -396,6 +542,10 @@ Note the variety: **most stops are minimal**, only the Pilatus highlight earns a
 - [ ] `lat`/`lon` in **decimal degrees** on every fixed-location stop; both omitted for vague stops; coordinates point at the actual place
 - [ ] `bookLink` only on paid attractions; only Klook URLs
 - [ ] `tags` use emoji + short label (no "Day 1" / "Travel" generics)
+- [ ] `hotels` filled when known/requested — `name` always, plus `loc`/`url` where you can; ordered by stay; no fabricated prices
+- [ ] `bookings` chips (if used) mirror the timeline's `bookLink`s — `label` + `url` each; 4–8 max
+- [ ] `prep` (if used) is tailored to *this* destination — right plug type, weather, local emergency numbers, real visa/insurance rules
+- [ ] `costs` (if used) are **per-person** in `baseCurrency`; `checklist` items are concrete day-of to-dos
 - [ ] Dates ISO, times 24h, days sorted, timeline within each day sorted by time
 - [ ] No prose outside the JSON. No code fences. Raw JSON only.
 

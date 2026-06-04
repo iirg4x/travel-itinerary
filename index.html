@@ -40,7 +40,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Leaflet (map view) — loaded lazily by MapView, but CSS preconnect helps -->
 <link rel="preconnect" href="https://unpkg.com">
@@ -106,9 +106,11 @@
     min-height: 100vh;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
+    /* Kill the 300ms double-tap-to-zoom gesture (pinch-zoom still works). */
+    touch-action: manipulation;
   }
   body.no-scroll { overflow: hidden; }
-  h1,h2,h3,h4 { font-family: 'Cormorant Garamond', Georgia, serif; color: var(--navy-text); line-height: 1.12; }
+  h1,h2,h3,h4 { font-family: 'DM Sans', system-ui, sans-serif; color: var(--navy-text); line-height: 1.12; }
   a { color: inherit; text-decoration: none; }
   button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
   img { max-width: 100%; display: block; }
@@ -136,10 +138,10 @@
     flex: 0 0 auto;
   }
   .appbar-btn:active { transform: scale(.9); }
-  .appbar-btn:hover { background: color-mix(in srgb, var(--text) 8%, transparent); }
+  @media (hover: hover) { .appbar-btn:hover { background: color-mix(in srgb, var(--text) 8%, transparent); } }
   .appbar-title {
     flex: 1; min-width: 0;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'DM Sans', system-ui, sans-serif;
     font-size: 22px; font-weight: 600; color: var(--navy-text);
     text-align: center;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -271,13 +273,33 @@
     background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
     border-radius: 16px; padding: 8px 12px; min-width: 64px; backdrop-filter: blur(6px);
   }
-  .count-badge .cb-num { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; line-height: 1; color: #fff; }
+  .count-badge .cb-num { font-family: 'DM Sans', system-ui, sans-serif; font-size: 26px; font-weight: 700; line-height: 1; color: #fff; }
   .count-badge .cb-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.75); margin-top: 3px; }
   .count-badge.live { background: rgba(200,16,46,.34); border-color: rgba(255,255,255,.4); }
 
   /* progress / budget bar */
   .meter { height: 8px; border-radius: 6px; background: var(--card-soft); overflow: hidden; border: 1px solid var(--border); }
   .meter > i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--gold), var(--red)); transition: width .7s var(--ease); }
+
+  /* category spend donut (spend page) */
+  .donut-head { text-align: center; margin: 2px 0 2px; }
+  .donut-head .dc-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: .16em; color: var(--text-muted); }
+  .donut-head .dc-amt { font-family: 'DM Sans', system-ui, sans-serif; font-size: 36px; font-weight: 700; color: var(--navy-text); line-height: 1.08; letter-spacing: -.01em; }
+  .donut-head .dc-amt .dc-dec { font-size: .58em; color: var(--text-muted); font-weight: 600; }
+  .donut-wrap { position: relative; width: 100%; max-width: 240px; aspect-ratio: 1 / 1; margin: 22px auto 16px; }
+  .donut { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+  .donut .d-track { fill: none; stroke: var(--card-soft); stroke-width: 14; }
+  .donut .d-seg { fill: none; stroke-width: 14; stroke-linecap: round;
+    transition: stroke-dasharray 1s var(--ease); }
+  .donut-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .donut-center span { font-family: 'DM Sans', system-ui, sans-serif; font-size: 24px; font-weight: 700; color: var(--navy-text); letter-spacing: -.01em; }
+  .donut-badge { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px; animation: badgePop .5s var(--ease) both; }
+  .donut-badge .db-ic { width: 38px; height: 38px; border-radius: 12px; background: var(--card); border: 1px solid var(--border); box-shadow: 0 6px 16px rgba(20, 28, 50, .16); display: flex; align-items: center; justify-content: center; color: var(--seg, var(--navy-text)); }
+  .donut-badge .db-ic svg { width: 19px; height: 19px; }
+  .donut-badge .db-lbl { font-size: 10.5px; font-weight: 600; color: var(--text-muted); white-space: nowrap; letter-spacing: -.01em; }
+  .donut-badge .db-lbl b { font-weight: 600; opacity: .7; margin-right: 1px; }
+  @keyframes badgePop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.5); } 60% { opacity: 1; } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .donut-badge { animation: none; } .donut .d-seg { transition: none; } }
 
   /* section heading */
   .section-head { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 2px 12px; }
@@ -293,8 +315,25 @@
   }
   .tile:active { transform: translateY(2px) scale(.985); }
   .tile .tile-ico { font-size: 22px; }
-  .tile .tile-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; color: var(--navy-text); margin-top: 8px; }
+  .tile .tile-title { font-family: 'DM Sans', system-ui, sans-serif; font-size: 19px; font-weight: 600; color: var(--navy-text); margin-top: 8px; }
   .tile .tile-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+  /* "Book in Advance" cards */
+  .book-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .book-card {
+    display: flex; align-items: center; gap: 12px; padding: 12px 13px;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--r-md);
+    box-shadow: var(--shadow-soft); transition: transform .16s var(--ease), border-color .16s;
+  }
+  .book-card:active { transform: scale(.98); }
+  @media (hover: hover){ .book-card:hover { border-color: color-mix(in srgb, var(--gold) 55%, var(--border)); } }
+  .book-card .bk-ic {
+    width: 40px; height: 40px; flex: 0 0 auto; border-radius: 12px; display: grid; place-items: center;
+    font-size: 20px; background: color-mix(in srgb, var(--gold) 14%, var(--card)); border: 1px solid var(--border);
+  }
+  .book-card .bk-body { flex: 1; min-width: 0; }
+  .book-card .bk-label { font-family: 'DM Sans', system-ui, sans-serif; font-size: 14.5px; font-weight: 600; color: var(--navy-text); line-height: 1.2; }
+  .book-card .bk-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
   /* day list rows */
   .day-row {
@@ -308,13 +347,13 @@
   .day-num {
     width: 46px; height: 46px; flex: 0 0 auto; border-radius: 13px;
     display: grid; place-items: center; background: var(--navy); color: #fff;
-    font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700;
+    font-family: 'DM Sans', system-ui, sans-serif; font-size: 22px; font-weight: 700;
   }
   [data-theme="dark"] .day-num { background: color-mix(in srgb, var(--gold) 22%, var(--card)); color: var(--navy-text); }
   .day-row.today .day-num { background: var(--red); }
   .day-row .dr-body { flex: 1; min-width: 0; }
   .day-row .dr-date { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--gold); font-weight: 600; }
-  .day-row .dr-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; color: var(--navy-text); line-height: 1.15; margin: 1px 0 4px; }
+  .day-row .dr-title { font-family: 'DM Sans', system-ui, sans-serif; font-size: 19px; font-weight: 600; color: var(--navy-text); line-height: 1.15; margin: 1px 0 4px; }
   .day-row .dr-tags { display: flex; gap: 5px; flex-wrap: wrap; }
   .day-row .dr-tags span { font-size: 10.5px; color: var(--text-muted); }
   .day-row .dr-chev { color: var(--text-muted); font-size: 18px; flex: 0 0 auto; }
@@ -336,8 +375,13 @@
     width: 14px; height: 14px; flex: 0 0 auto; margin-top: 11px; border-radius: 50%;
     background: var(--gold); z-index: 1; box-shadow: 0 0 0 4px var(--bg);
   }
-  .tl-item.highlight .tl-dot { background: var(--red); box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px color-mix(in srgb, var(--red) 22%, transparent); }
+  .tl-item.highlight .tl-dot { background: var(--red); box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px color-mix(in srgb, var(--red) 22%, transparent); animation: dotPulse 2.4s var(--ease) infinite; }
   .tl-item.sleep .tl-dot { background: var(--navy-text); }
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 0 4px var(--bg), 0 0 0 7px color-mix(in srgb, var(--red) 22%, transparent); }
+    50%      { box-shadow: 0 0 0 4px var(--bg), 0 0 0 11px color-mix(in srgb, var(--red) 6%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) { .tl-item.highlight .tl-dot { animation: none; } }
   .tl-body {
     flex: 1; min-width: 0; background: var(--card); border: 1px solid var(--border);
     border-radius: 14px; padding: 11px 14px; transition: border-color .15s, transform .12s;
@@ -389,17 +433,18 @@
 
   /* detail nav (prev/next day) */
   .detail-nav { display: flex; gap: 10px; margin-top: 26px; }
-  .detail-nav a { flex: 1; }
-  .detail-nav .nav-card { background: var(--card-soft); border: 1px solid var(--border); border-radius: var(--r-md); padding: 11px 14px; transition: transform .15s, border-color .15s; }
-  .detail-nav .nav-card:hover { border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); }
+  .detail-nav a { flex: 1 1 0; min-width: 0; }
+  .detail-nav .nav-card { background: var(--card-soft); border: 1px solid var(--border); border-radius: var(--r-md); padding: 11px 14px; transition: transform .15s, border-color .15s; min-width: 0; overflow: hidden; }
+  .detail-nav .nc-lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (hover: hover) { .detail-nav .nav-card:hover { border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); } }
   .detail-nav .nav-card:active { transform: scale(.98); }
   .detail-nav .nav-card.next { text-align: right; }
   .detail-nav .nc-lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); }
-  .detail-nav .nc-title { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 600; color: var(--navy-text); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .detail-nav .nc-title { font-family: 'DM Sans', system-ui, sans-serif; font-size: 15px; font-weight: 600; color: var(--navy-text); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* ─── Currency converter ─── */
   .conv-display { text-align: center; padding: 20px 0 8px; }
-  .conv-amt { font-family: 'Cormorant Garamond', serif; font-size: clamp(40px, 13vw, 64px); font-weight: 700; color: var(--navy-text); line-height: 1; letter-spacing: -.02em; }
+  .conv-amt { font-family: 'DM Sans', system-ui, sans-serif; font-size: clamp(40px, 13vw, 64px); font-weight: 700; color: var(--navy-text); line-height: 1; letter-spacing: -.02em; }
   .conv-sub { font-size: 13px; color: var(--text-muted); margin-top: 6px; }
   .conv-fields { display: grid; grid-template-columns: 1fr 44px 1fr; gap: 10px; align-items: end; }
   .field label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); font-weight: 600; }
@@ -420,10 +465,6 @@
 
   /* ─── Spend tracker ─── */
   .spend-summary { text-align: center; }
-  .spend-cats { display: grid; gap: 8px; margin-top: 8px; }
-  .cat-bar-row { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
-  .cat-bar { height: 7px; border-radius: 5px; background: var(--card-soft); overflow: hidden; border: 1px solid var(--border); }
-  .cat-bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold), var(--red)); transition: width .6s var(--ease); }
   .exp-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
   .exp-item:last-child { border-bottom: none; }
   .exp-ico { width: 38px; height: 38px; border-radius: 11px; background: var(--card-soft); border: 1px solid var(--border); display: grid; place-items: center; font-size: 18px; flex: 0 0 auto; }
@@ -549,8 +590,10 @@
   .card-menu { position: absolute; top: 16px; right: 14px; width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); color: #fff; display: grid; place-items: center; font-size: 17px; z-index: 3; }
   .sheet textarea { width: 100%; margin-top: 5px; min-height: 150px; padding: 12px; font-size: 12.5px; line-height: 1.5; font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--card-soft); border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text); resize: vertical; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sheet-actions { display: flex; gap: 10px; margin-top: 10px; }
-  .sheet-actions .btn { flex: 1; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 10px; align-items: stretch; }
+  /* Every action button carries .block (width:100%) so it has a definite basis and
+     they all share one row height — a button without it stretches the row taller. */
+  .sheet-actions .btn { flex: 1 1 0; }
   .btn.danger { background: transparent; color: var(--red); border: 1px solid color-mix(in srgb, var(--red) 45%, transparent); }
   .menu-list { display: grid; gap: 0; }
   .menu-list button { display: flex; align-items: center; gap: 13px; width: 100%; text-align: left; padding: 15px 4px; font-size: 15px; border-bottom: 1px solid var(--border); color: var(--text); }
@@ -582,7 +625,7 @@
 
 <!-- ─── Switzerland seed (embedded to avoid escaping bugs) ─── -->
 <script id="switzSeed" type="application/json">
-{"id":"switzerland","isStatic":false,"name":"Switzerland","startDate":"2026-05-26","endDate":"2026-06-02","travelers":2,"tagline":"🏔 Alps + Lakes","baseCurrency":"CHF","homeCurrency":"AED","budget":11600,"days":[{"title":"Geneva Arrival → Lake Geneva Riviera","date":"2026-05-26","town":"","tags":["🚗 Scenic Drive","🏰 Chillon","🛏 Le Mirador"],"routeMapUrl":"https://www.google.com/maps/dir/Geneva+Airport/Chexbres,Switzerland/Vevey,Switzerland/Chateau+de+Chillon,Veytaux/Montreux,Switzerland/Le+Mirador+Resort+Spa,Mont-Pelerin","timeline":[{"time":"13:15","label":"Geneva Airport — land & clear customs","placeQuery":"Geneva Airport","note":"","kind":"normal"},{"time":"14:30","label":"Pick up Cupra Formentor — head east toward Lausanne","placeQuery":"","note":"","kind":"normal"},{"time":"16:00","label":"Lavaux Vineyards — Chexbres Viewpoint","placeQuery":"Lavaux Vineyards Chexbres Viewpoint Switzerland","note":"UNESCO terraced vineyards overlooking Lake Geneva — the Riviera's signature view","kind":"highlight"},{"time":"17:00","label":"Vevey lakeside promenade","placeQuery":"Vevey Lakeside Promenade Switzerland","note":"","kind":"normal"},{"time":"18:00","label":"Chillon Castle — exterior + lake photos","placeQuery":"Chateau de Chillon Veytaux Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=chillon%20castle"}},{"time":"19:30","label":"Montreux Promenade walk","placeQuery":"Montreux Promenade Switzerland","note":"","kind":"normal"},{"time":"20:30","label":"Dinner in Montreux / Vevey","placeQuery":"","note":"","kind":"normal"},{"time":"22:00","label":"Drive up to Le Mirador — check in","placeQuery":"Le Mirador Resort Spa Mont-Pelerin","note":"","kind":"sleep"}]},{"title":"Rochers-de-Naye + Alpine Scenic Drive Loop","date":"2026-05-27","town":"","tags":["🚞 Cog Railway","⛰ 2,042m Peak","🚗 Alpine Loop","🛏 Le Mirador"],"routeMapUrl":"https://www.google.com/maps/dir/Le+Mirador+Resort,Mont-Pelerin/Montreux+Gare,Switzerland/Villars-sur-Ollon,Switzerland/Col+du+Pillon,Switzerland/Gstaad,Switzerland/Gruyeres,Switzerland/Le+Mirador+Resort,Mont-Pelerin","timeline":[{"time":"08:30","label":"Drive down to Montreux station — board the cog railway","placeQuery":"Montreux Railway Station Switzerland","note":"","kind":"normal"},{"time":"09:24","label":"Rochers-de-Naye — 50-min cog railway to 2,042m","placeQuery":"Rochers-de-Naye Switzerland","note":"Sweeping panorama over Lake Geneva to the Alps · climbs 1,600m","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=rochers-de-naye"}},{"time":"10:30","label":"Marmot Paradise + summit ridge walks","placeQuery":"Marmot Paradise Rochers-de-Naye","note":"Marmots included with your ticket · La Rambertia alpine garden opens Jun–Sep","kind":"highlight"},{"time":"12:30","label":"Cog railway back down — quick lunch near Montreux lakefront","placeQuery":"Montreux lakefront restaurants","note":"","kind":"normal"},{"time":"14:00","label":"Start alpine scenic drive: Villars-sur-Ollon","placeQuery":"Villars-sur-Ollon Switzerland","note":"Mountain road atmosphere — better than a long cruise if you enjoy driving","kind":"highlight"},{"time":"15:15","label":"Col du Pillon scenic pass","placeQuery":"Col du Pillon Switzerland","note":"Alpine road, mountain views, quick viewpoint stops","kind":"highlight"},{"time":"16:30","label":"Gstaad — coffee stop + short village walk","placeQuery":"Gstaad Switzerland","note":"","kind":"normal"},{"time":"18:15","label":"Gruyères — medieval village evening stop","placeQuery":"Gruyeres Switzerland","note":"Short walk, photos, dinner nearby","kind":"highlight"},{"time":"20:00","label":"Dinner in Gruyères / Vevey area","placeQuery":"","note":"","kind":"normal"},{"time":"21:30","label":"Scenic drive back to Le Mirador","placeQuery":"","note":"","kind":"sleep"}]},{"title":"Blausee → Oeschinen Lake → Interlaken","date":"2026-05-28","town":"","tags":["💎 Blausee","🛶 Oeschinen","🛏 Hotel Bellevue"],"routeMapUrl":"https://www.google.com/maps/dir/Le+Mirador+Resort,Mont-Pelerin/Blausee,Kandergrund,Switzerland/Kandersteg,Switzerland/Oeschinensee,Switzerland/St.+Beatus-Hoehlen,Sundlauenen/Interlaken,Switzerland","timeline":[{"time":"07:30","label":"Check out of Le Mirador — drive south","placeQuery":"","note":"","kind":"normal"},{"time":"10:45","label":"Blausee — turquoise natural lake walk (~75 min)","placeQuery":"Blausee Kandergrund Switzerland","note":"One of Switzerland's most beautiful hidden gems","kind":"highlight"},{"time":"12:45","label":"Cable car to Oeschinen Lake","placeQuery":"Oeschinensee Kandersteg Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=oeschinensee%20kandersteg"}},{"time":"13:15","label":"Lake walk + optional rowboat hire","placeQuery":"","note":"3+ hours — one of the must-dos of the trip","kind":"normal"},{"time":"17:00","label":"Drive to Interlaken (~45 min)","placeQuery":"Interlaken Switzerland","note":"","kind":"normal"},{"time":"17:00","label":"St. Beatus Caves — waterfall & cave system on Lake Thun","placeQuery":"St. Beatus Caves Sundlauenen Switzerland","note":"On the drive into Interlaken · ~1hr visit, last entry late afternoon","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=st%20beatus%20caves"}},{"time":"18:30","label":"Check in — Boutique Hotel Bellevue","placeQuery":"","note":"","kind":"normal"},{"time":"19:15","label":"Harder Kulm — sunset panorama over Interlaken","placeQuery":"Harder Kulm Interlaken","note":"Last gondola up ~21:30 in May","kind":"highlight","bookLink":{"label":"Book tickets","url":"https://www.klook.com/search/?query=harder%20kulm"}},{"time":"21:00","label":"Dinner at Pizzeria Lido — lakeside in Interlaken","placeQuery":"Ristorante Pizzeria Lido Interlaken","note":"","kind":"sleep"}]},{"title":"Jungfraujoch + Lauterbrunnen Waterfalls","date":"2026-05-29","town":"","tags":["❄ 3,454m Summit","💧 Trümmelbach","🛏 Hotel Bellevue"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Grindelwald+Terminal,Grindelwald/Lauterbrunnen,Switzerland/Interlaken,Switzerland","timeline":[{"time":"07:00","label":"Leave hotel — drive to Grindelwald Terminal","placeQuery":"Grindelwald Terminal Switzerland","note":"","kind":"normal"},{"time":"08:15","label":"Eiger Express cable car departs","placeQuery":"","note":"Journey ~45 min to summit","kind":"normal"},{"time":"09:45","label":"Jungfraujoch — Top of Europe (3,454m)","placeQuery":"Jungfraujoch Top of Europe Switzerland","note":"Sphinx Observatory · Aletsch Glacier · Ice Palace · 3.5 hrs on summit","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=jungfraujoch%20top%20of%20europe"}},{"time":"14:30","label":"Return to Grindelwald — drive to Lauterbrunnen","placeQuery":"","note":"","kind":"normal"},{"time":"15:45","label":"Staubbachfall — free-falling 297m waterfall","placeQuery":"Staubbachfall Lauterbrunnen Switzerland","note":"","kind":"highlight"},{"time":"16:45","label":"Trümmelbach Falls — glacial waterfalls inside the mountain","placeQuery":"Trummelbach Falls Lauterbrunnen","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=trummelbach%20falls"}},{"time":"18:30","label":"Scenic drive through Lauterbrunnen Valley","placeQuery":"Lauterbrunnen Valley Switzerland","note":"","kind":"normal"},{"time":"19:30","label":"Dinner at GoldenIndia Grindelwald or back in Interlaken","placeQuery":"Restaurant GoldenIndia Grindelwald","note":"","kind":"sleep"}]},{"title":"Grindelwald First + Glacier Canyon → Hotel Switch","date":"2026-05-30","town":"","tags":["🚡 Cliff Walk","🧊 Glacier Canyon","🛏 Hotel Du Nord"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Grindelwald,Switzerland/Gletscherschlucht+Grindelwald/Interlaken,Switzerland","timeline":[{"time":"07:30","label":"Check out — drive to Grindelwald","placeQuery":"","note":"","kind":"normal"},{"time":"09:00","label":"Cable car to Grindelwald First (2,168m)","placeQuery":"Grindelwald First Switzerland","note":"","kind":"normal"},{"time":"09:45","label":"First Cliff Walk + panoramic viewpoints","placeQuery":"First Cliff Walk Grindelwald","note":"3+ hrs · Eiger, Mönch & Jungfrau views · consider Trottibike descent","kind":"highlight","bookLink":{"label":"First activities","url":"https://www.klook.com/search/?query=grindelwald%20first"}},{"time":"13:30","label":"Lunch in Grindelwald village","placeQuery":"Grindelwald village Switzerland","note":"","kind":"normal"},{"time":"15:00","label":"Glacier Canyon (Gletscherschlucht)","placeQuery":"Gletscherschlucht Grindelwald Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=grindelwald%20glacier%20canyon"}},{"time":"18:00","label":"Check in — Hotel Du Nord, Interlaken","placeQuery":"Hotel du Nord Interlaken","note":"","kind":"normal"},{"time":"20:00","label":"Dinner at Restaurant Belvedere + optional Funky Chocolate Club dessert stop","placeQuery":"Restaurant Belvedere Grindelwald","note":"","kind":"sleep"}]},{"title":"Lucerne + Chapel Bridge + Mount Pilatus","date":"2026-05-31","town":"","tags":["🌉 Old Town","⛰ Pilatus 2,132m","🛏 Hotel Du Nord"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Lungern,Switzerland/Lucerne,Switzerland/Mount+Pilatus,Alpnach/Lucerne,Switzerland/Interlaken,Switzerland","timeline":[{"time":"07:00","label":"Leave Interlaken — drive north","placeQuery":"","note":"","kind":"normal"},{"time":"08:00","label":"Lungern Viewpoint — lake-in-valley panorama","placeQuery":"Lungern Viewpoint Switzerland","note":"","kind":"highlight"},{"time":"09:30","label":"Arrive Lucerne","placeQuery":"Lucerne Switzerland","note":"","kind":"normal"},{"time":"09:45","label":"Chapel Bridge (Kapellbrücke) + Old Town","placeQuery":"Kapellbrucke Chapel Bridge Lucerne","note":"Europe's oldest covered wooden bridge, built 1333","kind":"highlight"},{"time":"11:30","label":"Lake Lucerne boat ride","placeQuery":"Lake Lucerne Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=lake%20lucerne%20cruise"}},{"time":"13:00","label":"Lunch in Lucerne","placeQuery":"","note":"","kind":"normal"},{"time":"14:30","label":"Mount Pilatus — cable car from Kriens (2,132m)","placeQuery":"Mount Pilatus Switzerland","note":"World's steepest cogwheel railway option","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=mount%20pilatus%20golden%20round%20trip"}},{"time":"18:30","label":"Optional: Bürgenstock cliff walk + Hammetschwand Lift","placeQuery":"Burgenstock Resort Lake Lucerne","note":"Europe's highest outdoor lift, 30-min drive from Lucerne — swap in for Pilatus if short on time","kind":"normal"},{"time":"19:30","label":"Dinner + night walk by the lake","placeQuery":"","note":"","kind":"normal"},{"time":"22:00","label":"Drive back to Interlaken (~1h 20m)","placeQuery":"","note":"⚠ Longest day — expect ~23:30 hotel arrival","kind":"sleep"}]},{"title":"Aare Gorge + Reichenbach + Giessbach + Lake Brienz","date":"2026-06-01","town":"","tags":["🌊 Gorges","💦 Waterfalls","🛏 Hotel Du Nord"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Aareschlucht+West,Meiringen/Reichenbachfall,Meiringen/Rosenlaui,Switzerland/Brienz,Switzerland/Iseltwald,Switzerland/Interlaken,Switzerland","timeline":[{"time":"07:30","label":"Leave hotel — drive to Meiringen","placeQuery":"","note":"","kind":"normal"},{"time":"08:30","label":"Aare Gorge (Aareschlucht) — 1.4km walk through the narrows","placeQuery":"Aareschlucht Meiringen Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=aare%20gorge%20meiringen"}},{"time":"10:30","label":"Reichenbach Falls — the Sherlock Holmes waterfall","placeQuery":"Reichenbach Falls Meiringen Switzerland","note":"Funicular runs seasonally — check times ahead","kind":"highlight"},{"time":"12:00","label":"Drive scenic Rosenlaui road","placeQuery":"Rosenlaui Switzerland","note":"","kind":"normal"},{"time":"12:45","label":"Rosenlaui Glacier Gorge — narrow canyon walk","placeQuery":"Rosenlaui Glacier Gorge Switzerland","note":"","kind":"normal","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=rosenlaui%20glacier%20gorge"}},{"time":"14:30","label":"Late lunch near Meiringen or Brienz","placeQuery":"Meiringen Switzerland","note":"","kind":"normal"},{"time":"16:00","label":"Giessbach Waterfalls — 14-tier cascade above Lake Brienz","placeQuery":"Giessbach Falls Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=giessbach%20falls"}},{"time":"17:30","label":"Lake Brienz lakeside walk or optional boat ride","placeQuery":"Lake Brienz Switzerland","note":"","kind":"normal"},{"time":"19:00","label":"Iseltwald — sunset on the lake (famous jetty)","placeQuery":"Iseltwald Switzerland","note":"","kind":"highlight"},{"time":"20:00","label":"Dinner at Indian Gourmet Interlaken + final night walk","placeQuery":"Indian Gourmet Restaurant Interlaken","note":"","kind":"sleep"}]},{"title":"Interlaken → Gruyères → Geneva Departure","date":"2026-06-02","town":"","tags":["🧀 Gruyères","✈ 15:15 Departs"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Gruyeres,Switzerland/Geneva+Airport","timeline":[{"time":"07:30","label":"Check out of Hotel Du Nord","placeQuery":"","note":"","kind":"normal"},{"time":"09:30","label":"Gruyères village — medieval hilltop + castle","placeQuery":"Gruyeres medieval village Switzerland","note":"⚠ Keep it brief — leave by 11:00 to make the flight comfortably","kind":"highlight"},{"time":"10:30","label":"Coffee + quick walk — back on the road by 11:00","placeQuery":"","note":"","kind":"normal"},{"time":"12:30","label":"Return rental car at Geneva Airport","placeQuery":"Geneva Airport Switzerland","note":"","kind":"normal"},{"time":"13:00","label":"Check in + security (2h15 for international)","placeQuery":"","note":"","kind":"normal"},{"time":"15:15","label":"✈ Geneva → Dubai","placeQuery":"","note":"","kind":"highlight"},{"time":"23:55","label":"Arrive Dubai","placeQuery":"","note":"","kind":"sleep"}]}]}
+{"id":"switzerland","isStatic":false,"name":"Switzerland","startDate":"2026-05-26","endDate":"2026-06-02","travelers":2,"tagline":"🏔 Alps + Lakes","baseCurrency":"CHF","homeCurrency":"AED","budget":11600,"days":[{"title":"Geneva Arrival → Lake Geneva Riviera","date":"2026-05-26","town":"Vevey","tags":["🚗 Scenic Drive","🏰 Chillon","🛏 Le Mirador"],"routeMapUrl":"https://www.google.com/maps/dir/Geneva+Airport/Chexbres,Switzerland/Vevey,Switzerland/Chateau+de+Chillon,Veytaux/Montreux,Switzerland/Le+Mirador+Resort+Spa,Mont-Pelerin","timeline":[{"time":"13:15","label":"Geneva Airport — land & clear customs","placeQuery":"Geneva Airport","note":"","kind":"normal","lat":46.2378,"lon":6.1081},{"time":"14:30","label":"Pick up Cupra Formentor — head east toward Lausanne","placeQuery":"","note":"","kind":"normal"},{"time":"16:00","label":"Lavaux Vineyards — Chexbres Viewpoint","placeQuery":"Lavaux Vineyards Chexbres Viewpoint Switzerland","note":"UNESCO terraced vineyards overlooking Lake Geneva — the Riviera's signature view","kind":"highlight","lat":46.4786,"lon":6.7894,"stopInfo":{"parking":"Free roadside or Chexbres P+R (CHF 1/h)","duration":"30–45 min","tip":"Best light late afternoon for the terraces","fee":0}},{"time":"17:00","label":"Vevey lakeside promenade","placeQuery":"Vevey Lakeside Promenade Switzerland","note":"","kind":"normal","lat":46.4607,"lon":6.8358,"stopInfo":{"parking":"Vevey lakefront Parking du Marché (CHF 2.50/h)","fee":0,"duration":"45 min"}},{"time":"18:00","label":"Chillon Castle — exterior + lake photos","placeQuery":"Chateau de Chillon Veytaux Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=chillon%20castle"},"lat":46.4142,"lon":6.9276,"stopInfo":{"parking":"Chillon Castle lot (CHF 2/h)","fee":{"chf":13.5,"note":"optional — itinerary is exterior only"},"hours":"09:00–19:00","duration":"45 min (exterior)","tip":"Best photos from south side"}},{"time":"19:30","label":"Montreux Promenade walk","placeQuery":"Montreux Promenade Switzerland","note":"","kind":"normal","lat":46.4311,"lon":6.913,"stopInfo":{"parking":"Parking du Marché Montreux (CHF 2/h)","fee":0,"duration":"30 min"}},{"time":"20:30","label":"Dinner in Montreux / Vevey","placeQuery":"","note":"","kind":"normal"},{"time":"22:00","label":"Drive up to Le Mirador — check in","placeQuery":"Le Mirador Resort Spa Mont-Pelerin","note":"","kind":"sleep","lat":46.4815,"lon":6.8275,"stopInfo":{"parking":"Le Mirador self-parking — free for guests; valet CHF 25","tip":"Steep mountain road — drive in daylight if possible"}}],"lat":46.4628,"lon":6.8419,"checklist":["Pick up Cupra Formentor — inspect for scratches","Buy water + snacks at GVA Migros","Connect car to Apple/Android Auto","Confirm Mirador check-in"],"costs":[]},{"title":"Rochers-de-Naye + Alpine Scenic Drive Loop","date":"2026-05-27","town":"Montreux","tags":["🚞 Cog Railway","⛰ 2,042m Peak","🚗 Alpine Loop","🛏 Le Mirador"],"routeMapUrl":"https://www.google.com/maps/dir/Le+Mirador+Resort,Mont-Pelerin/Montreux+Gare,Switzerland/Villars-sur-Ollon,Switzerland/Col+du+Pillon,Switzerland/Gstaad,Switzerland/Gruyeres,Switzerland/Le+Mirador+Resort,Mont-Pelerin","timeline":[{"time":"08:30","label":"Drive down to Montreux station — board the cog railway","placeQuery":"Montreux Railway Station Switzerland","note":"","kind":"normal","lat":46.4337,"lon":6.9106,"stopInfo":{"parking":"Montreux station P+R (CHF 8/day)","tip":"Or leave car at Mirador, take MOB direct"}},{"time":"09:24","label":"Rochers-de-Naye — 50-min cog railway to 2,042m","placeQuery":"Rochers-de-Naye Switzerland","note":"Sweeping panorama over Lake Geneva to the Alps · climbs 1,600m","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=rochers-de-naye"},"lat":46.4318,"lon":6.9761,"stopInfo":{"fee":{"chf":36.4,"note":"half-fare RT MOB cog"},"hours":"First train 08:24","duration":"50 min each way","tip":"Sit on the right side going up for lake views"}},{"time":"10:30","label":"Marmot Paradise + summit ridge walks","placeQuery":"Marmot Paradise Rochers-de-Naye","note":"Marmots included with your ticket · La Rambertia alpine garden opens Jun–Sep","kind":"highlight","lat":46.4322,"lon":6.9772,"stopInfo":{"fee":0,"duration":"1.5 hr","tip":"Marmots free with summit ticket — alpine garden opens Jun"}},{"time":"12:30","label":"Cog railway back down — quick lunch near Montreux lakefront","placeQuery":"Montreux lakefront restaurants","note":"","kind":"normal","lat":46.433,"lon":6.911,"stopInfo":{"parking":"Pick car up at Montreux station P+R","duration":"45 min lunch"}},{"time":"14:00","label":"Start alpine scenic drive: Villars-sur-Ollon","placeQuery":"Villars-sur-Ollon Switzerland","note":"Mountain road atmosphere — better than a long cruise if you enjoy driving","kind":"highlight","lat":46.2978,"lon":7.0553,"stopInfo":{"parking":"Free roadside / village lots in Villars (CHF 1/h)","fee":0,"duration":"~45 min drive incl. photo stops","tip":"Fuel up before heading into the alps"}},{"time":"15:15","label":"Col du Pillon scenic pass","placeQuery":"Col du Pillon Switzerland","note":"Alpine road, mountain views, quick viewpoint stops","kind":"highlight","lat":46.3534,"lon":7.2046,"stopInfo":{"parking":"Roadside laybys at the pass (free)","fee":0,"duration":"15–20 min photo stop","tip":"Glacier 3000 cable car runs from here if you want to add a summit (CHF 79 RT, half-fare)"}},{"time":"16:30","label":"Gstaad — coffee stop + short village walk","placeQuery":"Gstaad Switzerland","note":"","kind":"normal","lat":46.4722,"lon":7.2888,"stopInfo":{"parking":"Centre paid lot (CHF 2/h) or free P+R north of village","fee":0,"duration":"45 min"}},{"time":"18:15","label":"Gruyères — medieval village evening stop","placeQuery":"Gruyeres Switzerland","note":"Short walk, photos, dinner nearby","kind":"highlight","lat":46.5837,"lon":7.0816,"stopInfo":{"parking":"P+R Gruyères outside village (CHF 5/day)","fee":0,"duration":"~1 hr walk","tip":"No cars in village — 5-min walk uphill from lot. Castle entry CHF 13 if open"}},{"time":"20:00","label":"Dinner in Gruyères / Vevey area","placeQuery":"","note":"","kind":"normal"},{"time":"21:30","label":"Scenic drive back to Le Mirador","placeQuery":"","note":"","kind":"sleep","stopInfo":{"tip":"~1h drive back via A12 or scenic via Bulle"}}],"lat":46.4312,"lon":6.9107,"checklist":["Pre-book Rochers-de-Naye cog (mob.ch)","Layer up — summit is freezing","Charge phone for Marmot Paradise photos","Fuel up before alpine loop (cheaper near Montreux than Gstaad)","Snacks/water for the drive — Col du Pillon has no shops"],"costs":[{"n":"Rochers-de-Naye cog","c":36.4}]},{"title":"Blausee → Oeschinen Lake → Interlaken","date":"2026-05-28","town":"Kandersteg","tags":["💎 Blausee","🛶 Oeschinen","🛏 Hotel Bellevue"],"routeMapUrl":"https://www.google.com/maps/dir/Le+Mirador+Resort,Mont-Pelerin/Blausee,Kandergrund,Switzerland/Kandersteg,Switzerland/Oeschinensee,Switzerland/St.+Beatus-Hoehlen,Sundlauenen/Interlaken,Switzerland","timeline":[{"time":"07:30","label":"Check out of Le Mirador — drive south","placeQuery":"","note":"","kind":"normal"},{"time":"10:45","label":"Blausee — turquoise natural lake walk (~75 min)","placeQuery":"Blausee Kandergrund Switzerland","note":"One of Switzerland's most beautiful hidden gems","kind":"highlight","lat":46.5324,"lon":7.6649,"stopInfo":{"parking":"Blausee paid lot (CHF 5 flat)","fee":{"chf":11,"note":"park entry"},"hours":"09:00–18:00","duration":"~1.5 hr loop","tip":"Glass-bottom boat extra CHF 8"}},{"time":"12:45","label":"Cable car to Oeschinen Lake","placeQuery":"Oeschinensee Kandersteg Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=oeschinensee%20kandersteg"},"lat":46.4985,"lon":7.7268,"stopInfo":{"parking":"Oeschinen base station (CHF 8 flat)","fee":{"chf":18.5,"note":"gondola RT, half-fare"},"hours":"Last gondola down 17:00 (May)","duration":"3+ hr total","tip":"Rowboat CHF 30/h at lake"}},{"time":"13:15","label":"Lake walk + optional rowboat hire","placeQuery":"","note":"3+ hours — one of the must-dos of the trip","kind":"normal","stopInfo":{"duration":"2–3 hr lake walk","tip":"No restaurants past the gondola — bring snacks"}},{"time":"17:00","label":"Drive to Interlaken (~45 min)","placeQuery":"Interlaken Switzerland","note":"","kind":"normal","lat":46.6855,"lon":7.8585},{"time":"17:00","label":"St. Beatus Caves — waterfall & cave system on Lake Thun","placeQuery":"St. Beatus Caves Sundlauenen Switzerland","note":"On the drive into Interlaken · ~1hr visit, last entry late afternoon","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=st%20beatus%20caves"},"lat":46.6847,"lon":7.7823,"stopInfo":{"parking":"St. Beatus Caves lot (CHF 5)","fee":{"chf":20,"note":"cave + museum"},"hours":"Last entry 16:30","duration":"1–1.5 hr","tip":"Cave is 10°C — bring a jacket"}},{"time":"18:30","label":"Check in — Boutique Hotel Bellevue","placeQuery":"","note":"","kind":"normal","stopInfo":{"parking":"Bellevue hotel guest parking (free)"}},{"time":"19:15","label":"Harder Kulm — sunset panorama over Interlaken","placeQuery":"Harder Kulm Interlaken","note":"Last gondola up ~21:30 in May","kind":"highlight","bookLink":{"label":"Book tickets","url":"https://www.klook.com/search/?query=harder%20kulm"},"lat":46.6997,"lon":7.8561,"stopInfo":{"parking":"Harder Kulm base in Interlaken (free street, 90 min limit)","fee":{"chf":22,"note":"funicular RT, half-fare"},"hours":"Last up 21:10 in May","duration":"1.5 hr inc. sunset"}},{"time":"21:00","label":"Dinner at Pizzeria Lido — lakeside in Interlaken","placeQuery":"Ristorante Pizzeria Lido Interlaken","note":"","kind":"sleep","lat":46.6863,"lon":7.852}],"lat":46.4956,"lon":7.673,"checklist":["Pre-book Oeschinensee gondola slot","Check out of Le Mirador by 11:00","Cash for Blausee + caves (cards work but slow)","Confirm Bellevue check-in"],"costs":[{"n":"Blausee","c":11},{"n":"Oeschinen gondola","c":18.5},{"n":"St. Beatus Caves","c":20},{"n":"Harder Kulm","c":22}]},{"title":"Jungfraujoch + Lauterbrunnen Waterfalls","date":"2026-05-29","town":"Grindelwald","tags":["❄ 3,454m Summit","💧 Trümmelbach","🛏 Hotel Bellevue"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Grindelwald+Terminal,Grindelwald/Lauterbrunnen,Switzerland/Interlaken,Switzerland","timeline":[{"time":"07:00","label":"Leave hotel — drive to Grindelwald Terminal","placeQuery":"Grindelwald Terminal Switzerland","note":"","kind":"normal","lat":46.6245,"lon":8.0203},{"time":"08:15","label":"Eiger Express cable car departs","placeQuery":"","note":"Journey ~45 min to summit","kind":"normal","stopInfo":{"parking":"Grindelwald Terminal multi-storey (CHF 18/day)","tip":"Arrive 30 min before booked train"}},{"time":"09:45","label":"Jungfraujoch — Top of Europe (3,454m)","placeQuery":"Jungfraujoch Top of Europe Switzerland","note":"Sphinx Observatory · Aletsch Glacier · Ice Palace · 3.5 hrs on summit","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=jungfraujoch%20top%20of%20europe"},"lat":46.5476,"lon":7.9854,"stopInfo":{"fee":{"chf":139.6,"note":"jungfrau.ch RT + CHF 10 mandatory seat res, half-fare"},"hours":"Trains every 30 min from Grindelwald Terminal","duration":"~3.5 hr on summit","tip":"Check live webcam night before — only go if clear"}},{"time":"14:30","label":"Return to Grindelwald — drive to Lauterbrunnen","placeQuery":"","note":"","kind":"normal"},{"time":"15:45","label":"Staubbachfall — free-falling 297m waterfall","placeQuery":"Staubbachfall Lauterbrunnen Switzerland","note":"","kind":"highlight","lat":46.5898,"lon":7.9054,"stopInfo":{"parking":"Free street parking in Lauterbrunnen village","fee":0,"duration":"20 min photo stop"}},{"time":"16:45","label":"Trümmelbach Falls — glacial waterfalls inside the mountain","placeQuery":"Trummelbach Falls Lauterbrunnen","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=trummelbach%20falls"},"lat":46.57,"lon":7.9132,"stopInfo":{"parking":"Trümmelbach lot (free)","fee":{"chf":18,"note":"cash or card on site"},"hours":"09:00–17:00","duration":"45 min","tip":"Funicular up to falls, walk back down"}},{"time":"18:30","label":"Scenic drive through Lauterbrunnen Valley","placeQuery":"Lauterbrunnen Valley Switzerland","note":"","kind":"normal","lat":46.5937,"lon":7.9089},{"time":"19:30","label":"Dinner at GoldenIndia Grindelwald or back in Interlaken","placeQuery":"Restaurant GoldenIndia Grindelwald","note":"","kind":"sleep","lat":46.6236,"lon":8.0395}],"lat":46.6244,"lon":8.0414,"checklist":["JUNGFRAUJOCH — check live webcam tonight, only go if clear","Sunglasses + gloves + warm jacket","Sunscreen — UV brutal at 3,454m","Pre-book seat reservation"],"costs":[{"n":"Jungfraujoch + seat res","c":139.6},{"n":"Trümmelbach Falls","c":18}]},{"title":"Grindelwald First + Glacier Canyon → Hotel Switch","date":"2026-05-30","town":"Grindelwald","tags":["🚡 Cliff Walk","🧊 Glacier Canyon","🛏 Hotel Du Nord"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Grindelwald,Switzerland/Gletscherschlucht+Grindelwald/Interlaken,Switzerland","timeline":[{"time":"07:30","label":"Check out — drive to Grindelwald","placeQuery":"","note":"","kind":"normal"},{"time":"09:00","label":"Cable car to Grindelwald First (2,168m)","placeQuery":"Grindelwald First Switzerland","note":"","kind":"normal","lat":46.6505,"lon":8.0651,"stopInfo":{"parking":"Grindelwald Terminal multi-storey (CHF 18/day)","fee":{"chf":38,"note":"First gondola RT, half-fare"},"hours":"First up 08:30","duration":"all morning"}},{"time":"09:45","label":"First Cliff Walk + panoramic viewpoints","placeQuery":"First Cliff Walk Grindelwald","note":"3+ hrs · Eiger, Mönch & Jungfrau views · consider Trottibike descent","kind":"highlight","bookLink":{"label":"First activities","url":"https://www.klook.com/search/?query=grindelwald%20first"},"lat":46.6603,"lon":8.053,"stopInfo":{"fee":0,"duration":"3+ hr inc. Cliff Walk + viewpoint hikes","tip":"Cliff Walk included with First ticket. Trottibike CHF 19 extra"}},{"time":"13:30","label":"Lunch in Grindelwald village","placeQuery":"Grindelwald village Switzerland","note":"","kind":"normal","lat":46.6244,"lon":8.0414},{"time":"15:00","label":"Glacier Canyon (Gletscherschlucht)","placeQuery":"Gletscherschlucht Grindelwald Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=grindelwald%20glacier%20canyon"},"lat":46.6133,"lon":8.0481,"stopInfo":{"parking":"Glacier Canyon roadside (CHF 5)","fee":{"chf":19,"note":"canyon + crystal museum"},"hours":"09:00–18:00","duration":"1–1.5 hr","tip":"Wet wooden walkways — grip shoes"}},{"time":"18:00","label":"Check in — Hotel Du Nord, Interlaken","placeQuery":"Hotel du Nord Interlaken","note":"","kind":"normal","lat":46.6882,"lon":7.8622,"stopInfo":{"parking":"Hotel Du Nord central — paid public Marktplatz or Coop (CHF 1.50/h)"}},{"time":"20:00","label":"Dinner at Restaurant Belvedere + optional Funky Chocolate Club dessert stop","placeQuery":"Restaurant Belvedere Grindelwald","note":"","kind":"sleep","lat":46.6252,"lon":8.0294}],"lat":46.6244,"lon":8.0414,"checklist":["Waterproof shoes — gorge is wet","Pre-book First gondola time slot","Check out of Bellevue, into Du Nord"],"costs":[{"n":"First + Cliff Walk","c":38},{"n":"Glacier Canyon","c":19}]},{"title":"Lucerne + Chapel Bridge + Mount Pilatus","date":"2026-05-31","town":"Lucerne","tags":["🌉 Old Town","⛰ Pilatus 2,132m","🛏 Hotel Du Nord"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Lungern,Switzerland/Lucerne,Switzerland/Mount+Pilatus,Alpnach/Lucerne,Switzerland/Interlaken,Switzerland","timeline":[{"time":"07:00","label":"Leave Interlaken — drive north","placeQuery":"","note":"","kind":"normal"},{"time":"08:00","label":"Lungern Viewpoint — lake-in-valley panorama","placeQuery":"Lungern Viewpoint Switzerland","note":"","kind":"highlight","lat":46.7982,"lon":8.1594,"stopInfo":{"parking":"Layby at Lungern viewpoint (free, busy)","fee":0,"duration":"15 min"}},{"time":"09:30","label":"Arrive Lucerne","placeQuery":"Lucerne Switzerland","note":"","kind":"normal","lat":47.0521,"lon":8.3058},{"time":"09:45","label":"Chapel Bridge (Kapellbrücke) + Old Town","placeQuery":"Kapellbrucke Chapel Bridge Lucerne","note":"Europe's oldest covered wooden bridge, built 1333","kind":"highlight","lat":47.0518,"lon":8.3077,"stopInfo":{"parking":"P+R Allmend (CHF 12/day) + bus, or Kesselturm garage (CHF 3/h)","fee":0,"duration":"~1.5 hr","tip":"Park Allmend Sundays — cheap + flat fee"}},{"time":"11:30","label":"Lake Lucerne boat ride","placeQuery":"Lake Lucerne Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=lake%20lucerne%20cruise"},"lat":47.013,"lon":8.41,"stopInfo":{"parking":"Lucerne lakefront garages","fee":{"chf":14,"note":"SGV ~1hr panorama, half-fare"},"hours":"Departures hourly","duration":"1 hr"}},{"time":"13:00","label":"Lunch in Lucerne","placeQuery":"","note":"","kind":"normal"},{"time":"14:30","label":"Mount Pilatus — cable car from Kriens (2,132m)","placeQuery":"Mount Pilatus Switzerland","note":"World's steepest cogwheel railway option","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=mount%20pilatus%20golden%20round%20trip"},"lat":46.979,"lon":8.2525,"stopInfo":{"parking":"Kriens Pilatus base (CHF 8/day)","fee":{"chf":59.9,"note":"Golden Round Trip half-fare incl. boat + cogwheel + cableway"},"hours":"Last cogwheel up 16:10","duration":"4–5 hr","tip":"Going UP via cogwheel from Alpnachstad = scarier; DOWN via cableway = faster"}},{"time":"18:30","label":"Optional: Bürgenstock cliff walk + Hammetschwand Lift","placeQuery":"Burgenstock Resort Lake Lucerne","note":"Europe's highest outdoor lift, 30-min drive from Lucerne — swap in for Pilatus if short on time","kind":"normal","lat":46.999,"lon":8.371,"stopInfo":{"parking":"Bürgenstock funicular base (CHF 10/day)","fee":{"chf":43,"note":"funicular RT CHF 25 + Hammetschwand Lift CHF 18"},"hours":"Lift last up 19:00","tip":"Swap with Pilatus if short on time"}},{"time":"19:30","label":"Dinner + night walk by the lake","placeQuery":"","note":"","kind":"normal"},{"time":"22:00","label":"Drive back to Interlaken (~1h 20m)","placeQuery":"","note":"⚠ Longest day — expect ~23:30 hotel arrival","kind":"sleep"}],"lat":47.0502,"lon":8.3093,"checklist":["Pre-book Pilatus Golden Round Trip","Long day — pack snacks + water","Sunday: supermarkets shut — buy Sat"],"costs":[{"n":"Lake Lucerne boat","c":14},{"n":"Pilatus Golden RT","c":59.9}]},{"title":"Aare Gorge + Reichenbach + Giessbach + Lake Brienz","date":"2026-06-01","town":"Brienz","tags":["🌊 Gorges","💦 Waterfalls","🛏 Hotel Du Nord"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Aareschlucht+West,Meiringen/Reichenbachfall,Meiringen/Rosenlaui,Switzerland/Brienz,Switzerland/Iseltwald,Switzerland/Interlaken,Switzerland","timeline":[{"time":"07:30","label":"Leave hotel — drive to Meiringen","placeQuery":"","note":"","kind":"normal"},{"time":"08:30","label":"Aare Gorge (Aareschlucht) — 1.4km walk through the narrows","placeQuery":"Aareschlucht Meiringen Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=aare%20gorge%20meiringen"},"lat":46.7199,"lon":8.2102,"stopInfo":{"parking":"Aareschlucht West lot (CHF 5)","fee":{"chf":25,"note":"combo: Aare Gorge + Reichenbach funicular"},"hours":"09:00–17:30","duration":"1.5 hr through narrows","tip":"Walk one way, bus or taxi back"}},{"time":"10:30","label":"Reichenbach Falls — the Sherlock Holmes waterfall","placeQuery":"Reichenbach Falls Meiringen Switzerland","note":"Funicular runs seasonally — check times ahead","kind":"highlight","lat":46.7133,"lon":8.1824,"stopInfo":{"parking":"Reichenbach funicular base (CHF 5)","fee":{"chf":18,"note":"standalone — included in combo above"},"hours":"09:15–18:00","duration":"1 hr inc. funicular"}},{"time":"12:00","label":"Drive scenic Rosenlaui road","placeQuery":"Rosenlaui Switzerland","note":"","kind":"normal","lat":46.6802,"lon":8.1534,"stopInfo":{"parking":"Roadside laybys on Rosenlaui pass (free)","duration":"30 min scenic drive","tip":"Narrow road — pass closed in winter, May usually open"}},{"time":"12:45","label":"Rosenlaui Glacier Gorge — narrow canyon walk","placeQuery":"Rosenlaui Glacier Gorge Switzerland","note":"","kind":"normal","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=rosenlaui%20glacier%20gorge"},"lat":46.677,"lon":8.158,"stopInfo":{"parking":"Rosenlaui Hotel lot (free)","fee":{"chf":11,"note":"glacier gorge entry"},"hours":"09:00–18:00","duration":"45 min walk"}},{"time":"14:30","label":"Late lunch near Meiringen or Brienz","placeQuery":"Meiringen Switzerland","note":"","kind":"normal","lat":46.726,"lon":8.1892},{"time":"16:00","label":"Giessbach Waterfalls — 14-tier cascade above Lake Brienz","placeQuery":"Giessbach Falls Switzerland","note":"","kind":"highlight","bookLink":{"label":"Book on Klook","url":"https://www.klook.com/search/?query=giessbach%20falls"},"lat":46.7074,"lon":8.0262,"stopInfo":{"parking":"Giessbach lakeside lot (CHF 5)","fee":{"chf":14,"note":"funicular RT"},"hours":"Funicular every 30 min until 17:50","duration":"1.5 hr","tip":"Or take SGV boat from Brienz for an arrival on water"}},{"time":"17:30","label":"Lake Brienz lakeside walk or optional boat ride","placeQuery":"Lake Brienz Switzerland","note":"","kind":"normal","lat":46.723,"lon":7.965,"stopInfo":{"parking":"Brienz lakefront (free 2h)","duration":"45 min"}},{"time":"19:00","label":"Iseltwald — sunset on the lake (famous jetty)","placeQuery":"Iseltwald Switzerland","note":"","kind":"highlight","lat":46.7105,"lon":7.9635,"stopInfo":{"parking":"Iseltwald village lot (CHF 5/h, fills up fast)","fee":{"chf":5,"note":"pier toll added in 2023 to manage K-drama crowds"},"hours":"Pier 24h","duration":"30 min","tip":"⚠ Park OUTSIDE village & walk in — village access metered"}},{"time":"20:00","label":"Dinner at Indian Gourmet Interlaken + final night walk","placeQuery":"Indian Gourmet Restaurant Interlaken","note":"","kind":"sleep","lat":46.6856,"lon":7.853}],"lat":46.7437,"lon":8.0388,"checklist":["Waterproof + jacket for gorges","Park OUTSIDE Iseltwald village","Cash for on-site fees"],"costs":[{"n":"Aare + Reichenbach combo","c":25},{"n":"Rosenlaui","c":11},{"n":"Giessbach funicular","c":14},{"n":"Iseltwald pier","c":5}]},{"title":"Interlaken → Gruyères → Geneva Departure","date":"2026-06-02","town":"Gruyères","tags":["🧀 Gruyères","✈ 15:15 Departs"],"routeMapUrl":"https://www.google.com/maps/dir/Interlaken,Switzerland/Gruyeres,Switzerland/Geneva+Airport","timeline":[{"time":"07:30","label":"Check out of Hotel Du Nord","placeQuery":"","note":"","kind":"normal"},{"time":"09:30","label":"Gruyères village — medieval hilltop + castle","placeQuery":"Gruyeres medieval village Switzerland","note":"⚠ Keep it brief — leave by 11:00 to make the flight comfortably","kind":"highlight","lat":46.5841,"lon":7.0827,"stopInfo":{"parking":"P+R Gruyères outside village (CHF 5/day)","fee":{"chf":13,"note":"castle entry — skip if pressed for time"},"hours":"Castle 10:00–17:00","duration":"1 hr","tip":"No cars in village — 5-min walk uphill from lot"}},{"time":"10:30","label":"Coffee + quick walk — back on the road by 11:00","placeQuery":"","note":"","kind":"normal"},{"time":"12:30","label":"Return rental car at Geneva Airport","placeQuery":"Geneva Airport Switzerland","note":"","kind":"normal","lat":46.2378,"lon":6.1081,"stopInfo":{"parking":"GVA rental return — follow signs to \"Car Rental\"","tip":"Fill diesel at Migrol Versoix on the way"}},{"time":"13:00","label":"Check in + security (2h15 for international)","placeQuery":"","note":"","kind":"normal"},{"time":"15:15","label":"✈ Geneva → Dubai","placeQuery":"","note":"","kind":"highlight"},{"time":"23:55","label":"Arrive Dubai","placeQuery":"","note":"","kind":"sleep"}],"lat":46.584,"lon":7.0827,"checklist":["Fill diesel before GVA (Migrol Versoix)","Check out of Du Nord by 09:00","Return rental ≥2h before flight","Boarding pass ready"],"costs":[{"n":"Gruyères castle (optional)","c":13}]}],"hotels":[{"nights":"Nights 1–2 · 26–27 May","name":"Le Mirador Resort & Spa","loc":"Mont-Pèlerin, Lake Geneva Riviera","url":"https://www.kayak.com/hotels/Mont-Pelerin,Switzerland/2026-05-26/2026-05-28/2adults"},{"nights":"Nights 3–4 · 28–29 May","name":"Boutique Hotel Bellevue","loc":"Interlaken","url":"https://www.kayak.com/hotels/Interlaken,Switzerland/2026-05-28/2026-05-30/2adults"},{"nights":"Nights 5–7 · 30 May–1 Jun","name":"Hotel Du Nord","loc":"Interlaken","url":"https://www.kayak.com/hotels/Interlaken,Switzerland/2026-05-30/2026-06-02/2adults"}],"bookings":[{"ico":"🏔","label":"Jungfraujoch","url":"https://www.klook.com/search/?query=jungfraujoch%20top%20of%20europe"},{"ico":"🚡","label":"Grindelwald First","url":"https://www.klook.com/search/?query=grindelwald%20first"},{"ico":"⛰","label":"Mount Pilatus","url":"https://www.klook.com/search/?query=mount%20pilatus%20golden%20round%20trip"},{"ico":"🌅","label":"Harder Kulm","url":"https://www.klook.com/search/?query=harder%20kulm"},{"ico":"🛶","label":"Oeschinen Lake","url":"https://www.klook.com/search/?query=oeschinensee%20kandersteg"},{"ico":"⛴","label":"Lake Lucerne Boat","url":"https://www.klook.com/search/?query=lake%20lucerne%20cruise"}],"prep":[{"title":"📄 Documents","items":[{"id":"doc-passport","text":"Passport valid through Sept 2026","hint":"Schengen requires 3+ months past 2 Jun return"},{"id":"doc-visa","text":"Schengen visa current","hint":"check the entry/exit dates cover 26 May–2 Jun"},{"id":"doc-insurance","text":"Travel insurance saved offline","hint":"Schengen requires €30k cover minimum — keep policy PDF on phone"},{"id":"doc-license","text":"UAE license + International Driving Permit packed","hint":"both required for the Cupra rental at GVA"},{"id":"doc-confirms","text":"All confirmations saved offline on phone","hint":"Mirador · Bellevue · Du Nord · Emirates flight · car rental voucher"}]},{"title":"💳 Money","items":[{"id":"money-bank","text":"Notify bank of travel dates","hint":"avoid card freezes on first CHF transaction"},{"id":"money-cash","text":"~CHF 200 cash for parking machines + small tips","hint":"many lot meters in Switzerland are coin-only"},{"id":"money-card","text":"Wise / Revolut / multi-currency card loaded","hint":"avoids FX fees on Swiss operator sites"}]},{"title":"🎟 Pre-Book Attractions","items":[{"id":"book-jungfrau","text":"Jungfraujoch + CHF 10 seat reservation","hint":"Day 4 · Fri 29 May — pick a clear-weather morning"},{"id":"book-oeschinen","text":"Oeschinensee gondola time slot","hint":"Day 3 · Thu 28 May — slots sell out for popular times"},{"id":"book-pilatus","text":"Mount Pilatus Golden Round Trip","hint":"Day 6 · Sun 31 May — book the cogwheel reservation"},{"id":"book-first","text":"Grindelwald First gondola + Cliff Walk","hint":"Day 5 · Sat 30 May"},{"id":"book-rochers","text":"Rochers-de-Naye cog railway","hint":"Day 2 · Wed 27 May — already booked ✓"}]},{"title":"🎒 Pack","items":[{"id":"pack-warm","text":"Warm layers + windproof jacket","hint":"Jungfraujoch summit is around -10°C even in late May"},{"id":"pack-shoes","text":"Hiking shoes + light waterproof shell","hint":"gorges and waterfalls are wet, walkways slippery"},{"id":"pack-sun","text":"Sunglasses · gloves · hat · high-SPF sunscreen","hint":"UV at 3,454m is brutal even on cool days"},{"id":"pack-bag","text":"Daypack for daily excursions","hint":""},{"id":"pack-adapter","text":"Type J power adapter","hint":"Switzerland uses Type J — Type C plugs fit but feel loose"},{"id":"pack-power","text":"Phone + power bank + USB-C/Lightning cables","hint":""},{"id":"pack-camera","text":"Camera + spare battery + memory card","hint":""},{"id":"pack-bottle","text":"Reusable water bottle","hint":"tap water is excellent everywhere in Switzerland"}]},{"title":"📱 Apps & Digital","items":[{"id":"app-pwa","text":"This itinerary added to Home Screen","hint":"Safari → Share → Add to Home Screen"},{"id":"app-maps","text":"Offline Google Maps downloaded for Switzerland","hint":"Maps → profile → Offline maps → download Switzerland"},{"id":"app-sbb","text":"SBB Mobile app installed","hint":"live Swiss train times + cog railway timetables"},{"id":"app-whatsapp","text":"WhatsApp threads opened with all 3 hotels","hint":"fastest way to handle late check-in or parking"},{"id":"app-emergency","text":"Emergency numbers saved","hint":"112 EU-wide · 117 police · 144 medical"}]},{"title":"✈ Flight Day (Tue 26 May)","items":[{"id":"fly-checkin","text":"Emirates online check-in done 24h before","hint":""},{"id":"fly-airport","text":"At DXB Terminal 3 ≥3h before departure","hint":"Emirates international"},{"id":"fly-charge","text":"All devices fully charged + power bank topped up","hint":""},{"id":"fly-bottle","text":"Reusable water bottle empty for security","hint":"refill at the gate"}]}]}
 </script>
 
 <!-- ─── App ─── -->
@@ -593,115 +636,22 @@
    Storage · FX · Trip · TripStore · Router · View(s) · App
    ════════════════════════════════════════════════════════════ */
 
-/* ─── Switzerland enrichment data (merged into the seed trip by index) ─── */
-const DAY_META = [
-  { town:'Vevey',       lat:46.4628, lon:6.8419 },
-  { town:'Montreux',    lat:46.4312, lon:6.9107 },
-  { town:'Kandersteg',  lat:46.4956, lon:7.6730 },
-  { town:'Grindelwald', lat:46.6244, lon:8.0414 },
-  { town:'Grindelwald', lat:46.6244, lon:8.0414 },
-  { town:'Lucerne',     lat:47.0502, lon:8.3093 },
-  { town:'Brienz',      lat:46.7437, lon:8.0388 },
-  { town:'Gruyères',    lat:46.5840, lon:7.0827 }
-];
-/* Per-stop coordinates, aligned by index to each day's timeline.
-   null = a stop with no fixed location (driving, dinner TBD, in-transit).
-   Curated from OSM geocoding; obvious bad matches corrected by hand. */
-const STOP_GEO = {
-  0:[[46.2378,6.1081], null, [46.4786,6.7894], [46.4607,6.8358], [46.4142,6.9276], [46.4311,6.9130], null, [46.4815,6.8275]],
-  1:[[46.4337,6.9106], [46.4318,6.9761], [46.4322,6.9772], [46.4330,6.9110], [46.2978,7.0553], [46.3534,7.2046], [46.4722,7.2888], [46.5837,7.0816], null, null],
-  2:[null, [46.5324,7.6649], [46.4985,7.7268], null, [46.6855,7.8585], [46.6847,7.7823], null, [46.6997,7.8561], [46.6863,7.8520]],
-  3:[[46.6245,8.0203], null, [46.5476,7.9854], null, [46.5898,7.9054], [46.5700,7.9132], [46.5937,7.9089], [46.6236,8.0395]],
-  4:[null, [46.6505,8.0651], [46.6603,8.0530], [46.6244,8.0414], [46.6133,8.0481], [46.6882,7.8622], [46.6252,8.0294]],
-  5:[null, [46.7982,8.1594], [47.0521,8.3058], [47.0518,8.3077], [47.0130,8.4100], null, [46.9790,8.2525], [46.9990,8.3710], null, null],
-  6:[null, [46.7199,8.2102], [46.7133,8.1824], [46.6802,8.1534], [46.6770,8.1580], [46.7260,8.1892], [46.7074,8.0262], [46.7230,7.9650], [46.7105,7.9635], [46.6856,7.8530]],
-  7:[null, [46.5841,7.0827], null, [46.2378,6.1081], null, null, null]
-};
-const STOPS = {
-  0:[{},{},{parking:'Free roadside or Chexbres P+R (CHF 1/h)',duration:'30–45 min',tip:'Best light late afternoon for the terraces',fee:0},{parking:'Vevey lakefront Parking du Marché (CHF 2.50/h)',fee:0,duration:'45 min'},{parking:'Chillon Castle lot (CHF 2/h)',fee:{chf:13.50,note:'optional — itinerary is exterior only'},hours:'09:00–19:00',duration:'45 min (exterior)',tip:'Best photos from south side'},{parking:'Parking du Marché Montreux (CHF 2/h)',fee:0,duration:'30 min'},{},{parking:'Le Mirador self-parking — free for guests; valet CHF 25',tip:'Steep mountain road — drive in daylight if possible'}],
-  1:[{parking:'Montreux station P+R (CHF 8/day)',tip:'Or leave car at Mirador, take MOB direct'},{fee:{chf:36.40,note:'half-fare RT MOB cog'},hours:'First train 08:24',duration:'50 min each way',tip:'Sit on the right side going up for lake views'},{fee:0,duration:'1.5 hr',tip:'Marmots free with summit ticket — alpine garden opens Jun'},{parking:'Pick car up at Montreux station P+R',duration:'45 min lunch'},{parking:'Free roadside / village lots in Villars (CHF 1/h)',fee:0,duration:'~45 min drive incl. photo stops',tip:'Fuel up before heading into the alps'},{parking:'Roadside laybys at the pass (free)',fee:0,duration:'15–20 min photo stop',tip:'Glacier 3000 cable car runs from here if you want to add a summit (CHF 79 RT, half-fare)'},{parking:'Centre paid lot (CHF 2/h) or free P+R north of village',fee:0,duration:'45 min'},{parking:'P+R Gruyères outside village (CHF 5/day)',fee:0,duration:'~1 hr walk',tip:'No cars in village — 5-min walk uphill from lot. Castle entry CHF 13 if open'},{},{tip:'~1h drive back via A12 or scenic via Bulle'}],
-  2:[{},{parking:'Blausee paid lot (CHF 5 flat)',fee:{chf:11,note:'park entry'},hours:'09:00–18:00',duration:'~1.5 hr loop',tip:'Glass-bottom boat extra CHF 8'},{parking:'Oeschinen base station (CHF 8 flat)',fee:{chf:18.50,note:'gondola RT, half-fare'},hours:'Last gondola down 17:00 (May)',duration:'3+ hr total',tip:'Rowboat CHF 30/h at lake'},{duration:'2–3 hr lake walk',tip:'No restaurants past the gondola — bring snacks'},{},{parking:'St. Beatus Caves lot (CHF 5)',fee:{chf:20,note:'cave + museum'},hours:'Last entry 16:30',duration:'1–1.5 hr',tip:'Cave is 10°C — bring a jacket'},{parking:'Bellevue hotel guest parking (free)'},{parking:'Harder Kulm base in Interlaken (free street, 90 min limit)',fee:{chf:22,note:'funicular RT, half-fare'},hours:'Last up 21:10 in May',duration:'1.5 hr inc. sunset'},{}],
-  3:[{},{parking:'Grindelwald Terminal multi-storey (CHF 18/day)',tip:'Arrive 30 min before booked train'},{fee:{chf:139.60,note:'jungfrau.ch RT + CHF 10 mandatory seat res, half-fare'},hours:'Trains every 30 min from Grindelwald Terminal',duration:'~3.5 hr on summit',tip:'Check live webcam night before — only go if clear'},{},{parking:'Free street parking in Lauterbrunnen village',fee:0,duration:'20 min photo stop'},{parking:'Trümmelbach lot (free)',fee:{chf:18,note:'cash or card on site'},hours:'09:00–17:00',duration:'45 min',tip:'Funicular up to falls, walk back down'},{},{}],
-  4:[{},{parking:'Grindelwald Terminal multi-storey (CHF 18/day)',fee:{chf:38,note:'First gondola RT, half-fare'},hours:'First up 08:30',duration:'all morning'},{fee:0,duration:'3+ hr inc. Cliff Walk + viewpoint hikes',tip:'Cliff Walk included with First ticket. Trottibike CHF 19 extra'},{},{parking:'Glacier Canyon roadside (CHF 5)',fee:{chf:19,note:'canyon + crystal museum'},hours:'09:00–18:00',duration:'1–1.5 hr',tip:'Wet wooden walkways — grip shoes'},{parking:'Hotel Du Nord central — paid public Marktplatz or Coop (CHF 1.50/h)'},{}],
-  5:[{},{parking:'Layby at Lungern viewpoint (free, busy)',fee:0,duration:'15 min'},{},{parking:'P+R Allmend (CHF 12/day) + bus, or Kesselturm garage (CHF 3/h)',fee:0,duration:'~1.5 hr',tip:'Park Allmend Sundays — cheap + flat fee'},{parking:'Lucerne lakefront garages',fee:{chf:14,note:'SGV ~1hr panorama, half-fare'},hours:'Departures hourly',duration:'1 hr'},{},{parking:'Kriens Pilatus base (CHF 8/day)',fee:{chf:59.90,note:'Golden Round Trip half-fare incl. boat + cogwheel + cableway'},hours:'Last cogwheel up 16:10',duration:'4–5 hr',tip:'Going UP via cogwheel from Alpnachstad = scarier; DOWN via cableway = faster'},{parking:'Bürgenstock funicular base (CHF 10/day)',fee:{chf:43,note:'funicular RT CHF 25 + Hammetschwand Lift CHF 18'},hours:'Lift last up 19:00',tip:'Swap with Pilatus if short on time'},{},{}],
-  6:[{},{parking:'Aareschlucht West lot (CHF 5)',fee:{chf:25,note:'combo: Aare Gorge + Reichenbach funicular'},hours:'09:00–17:30',duration:'1.5 hr through narrows',tip:'Walk one way, bus or taxi back'},{parking:'Reichenbach funicular base (CHF 5)',fee:{chf:18,note:'standalone — included in combo above'},hours:'09:15–18:00',duration:'1 hr inc. funicular'},{parking:'Roadside laybys on Rosenlaui pass (free)',duration:'30 min scenic drive',tip:'Narrow road — pass closed in winter, May usually open'},{parking:'Rosenlaui Hotel lot (free)',fee:{chf:11,note:'glacier gorge entry'},hours:'09:00–18:00',duration:'45 min walk'},{},{parking:'Giessbach lakeside lot (CHF 5)',fee:{chf:14,note:'funicular RT'},hours:'Funicular every 30 min until 17:50',duration:'1.5 hr',tip:'Or take SGV boat from Brienz for an arrival on water'},{parking:'Brienz lakefront (free 2h)',duration:'45 min'},{parking:'Iseltwald village lot (CHF 5/h, fills up fast)',fee:{chf:5,note:'pier toll added in 2023 to manage K-drama crowds'},hours:'Pier 24h',duration:'30 min',tip:'⚠ Park OUTSIDE village & walk in — village access metered'},{}],
-  7:[{},{parking:'P+R Gruyères outside village (CHF 5/day)',fee:{chf:13,note:'castle entry — skip if pressed for time'},hours:'Castle 10:00–17:00',duration:'1 hr',tip:'No cars in village — 5-min walk uphill from lot'},{},{parking:'GVA rental return — follow signs to "Car Rental"',tip:'Fill diesel at Migrol Versoix on the way'},{},{},{}]
-};
-const CHECKLISTS = {
-  0:['Pick up Cupra Formentor — inspect for scratches','Buy water + snacks at GVA Migros','Connect car to Apple/Android Auto','Confirm Mirador check-in'],
-  1:['Pre-book Rochers-de-Naye cog (mob.ch)','Layer up — summit is freezing','Charge phone for Marmot Paradise photos','Fuel up before alpine loop (cheaper near Montreux than Gstaad)','Snacks/water for the drive — Col du Pillon has no shops'],
-  2:['Pre-book Oeschinensee gondola slot','Check out of Le Mirador by 11:00','Cash for Blausee + caves (cards work but slow)','Confirm Bellevue check-in'],
-  3:['JUNGFRAUJOCH — check live webcam tonight, only go if clear','Sunglasses + gloves + warm jacket','Sunscreen — UV brutal at 3,454m','Pre-book seat reservation'],
-  4:['Waterproof shoes — gorge is wet','Pre-book First gondola time slot','Check out of Bellevue, into Du Nord'],
-  5:['Pre-book Pilatus Golden Round Trip','Long day — pack snacks + water','Sunday: supermarkets shut — buy Sat'],
-  6:['Waterproof + jacket for gorges','Park OUTSIDE Iseltwald village','Cash for on-site fees'],
-  7:['Fill diesel before GVA (Migrol Versoix)','Check out of Du Nord by 09:00','Return rental ≥2h before flight','Boarding pass ready']
-};
-const DAY_COSTS = {
-  0:[],1:[{n:'Rochers-de-Naye cog',c:36.40}],
-  2:[{n:'Blausee',c:11},{n:'Oeschinen gondola',c:18.50},{n:'St. Beatus Caves',c:20},{n:'Harder Kulm',c:22}],
-  3:[{n:'Jungfraujoch + seat res',c:139.60},{n:'Trümmelbach Falls',c:18}],
-  4:[{n:'First + Cliff Walk',c:38},{n:'Glacier Canyon',c:19}],
-  5:[{n:'Lake Lucerne boat',c:14},{n:'Pilatus Golden RT',c:59.90}],
-  6:[{n:'Aare + Reichenbach combo',c:25},{n:'Rosenlaui',c:11},{n:'Giessbach funicular',c:14},{n:'Iseltwald pier',c:5}],
-  7:[{n:'Gruyères castle (optional)',c:13}]
-};
-const HOTELS = [
-  { nights:'Nights 1–2 · 26–27 May', name:'Le Mirador Resort & Spa', loc:'Mont-Pèlerin, Lake Geneva Riviera', url:'https://www.kayak.com/hotels/Mont-Pelerin,Switzerland/2026-05-26/2026-05-28/2adults' },
-  { nights:'Nights 3–4 · 28–29 May', name:'Boutique Hotel Bellevue', loc:'Interlaken', url:'https://www.kayak.com/hotels/Interlaken,Switzerland/2026-05-28/2026-05-30/2adults' },
-  { nights:'Nights 5–7 · 30 May–1 Jun', name:'Hotel Du Nord', loc:'Interlaken', url:'https://www.kayak.com/hotels/Interlaken,Switzerland/2026-05-30/2026-06-02/2adults' }
-];
-const BOOKINGS = [
-  { ico:'🏔', label:'Jungfraujoch', url:'https://www.klook.com/search/?query=jungfraujoch%20top%20of%20europe' },
-  { ico:'🚡', label:'Grindelwald First', url:'https://www.klook.com/search/?query=grindelwald%20first' },
-  { ico:'⛰', label:'Mount Pilatus', url:'https://www.klook.com/search/?query=mount%20pilatus%20golden%20round%20trip' },
-  { ico:'🌅', label:'Harder Kulm', url:'https://www.klook.com/search/?query=harder%20kulm' },
-  { ico:'🛶', label:'Oeschinen Lake', url:'https://www.klook.com/search/?query=oeschinensee%20kandersteg' },
-  { ico:'⛴', label:'Lake Lucerne Boat', url:'https://www.klook.com/search/?query=lake%20lucerne%20cruise' }
-];
-const PREP = [
-  { title:'📄 Documents', items:[
-    {id:'doc-passport',text:'Passport valid through Sept 2026',hint:'Schengen requires 3+ months past 2 Jun return'},
-    {id:'doc-visa',text:'Schengen visa current',hint:'check the entry/exit dates cover 26 May–2 Jun'},
-    {id:'doc-insurance',text:'Travel insurance saved offline',hint:'Schengen requires €30k cover minimum — keep policy PDF on phone'},
-    {id:'doc-license',text:'UAE license + International Driving Permit packed',hint:'both required for the Cupra rental at GVA'},
-    {id:'doc-confirms',text:'All confirmations saved offline on phone',hint:'Mirador · Bellevue · Du Nord · Emirates flight · car rental voucher'}]},
-  { title:'💳 Money', items:[
-    {id:'money-bank',text:'Notify bank of travel dates',hint:'avoid card freezes on first CHF transaction'},
-    {id:'money-cash',text:'~CHF 200 cash for parking machines + small tips',hint:'many lot meters in Switzerland are coin-only'},
-    {id:'money-card',text:'Wise / Revolut / multi-currency card loaded',hint:'avoids FX fees on Swiss operator sites'}]},
-  { title:'🎟 Pre-Book Attractions', items:[
-    {id:'book-jungfrau',text:'Jungfraujoch + CHF 10 seat reservation',hint:'Day 4 · Fri 29 May — pick a clear-weather morning'},
-    {id:'book-oeschinen',text:'Oeschinensee gondola time slot',hint:'Day 3 · Thu 28 May — slots sell out for popular times'},
-    {id:'book-pilatus',text:'Mount Pilatus Golden Round Trip',hint:'Day 6 · Sun 31 May — book the cogwheel reservation'},
-    {id:'book-first',text:'Grindelwald First gondola + Cliff Walk',hint:'Day 5 · Sat 30 May'},
-    {id:'book-rochers',text:'Rochers-de-Naye cog railway',hint:'Day 2 · Wed 27 May — already booked ✓'}]},
-  { title:'🎒 Pack', items:[
-    {id:'pack-warm',text:'Warm layers + windproof jacket',hint:'Jungfraujoch summit is around -10°C even in late May'},
-    {id:'pack-shoes',text:'Hiking shoes + light waterproof shell',hint:'gorges and waterfalls are wet, walkways slippery'},
-    {id:'pack-sun',text:'Sunglasses · gloves · hat · high-SPF sunscreen',hint:'UV at 3,454m is brutal even on cool days'},
-    {id:'pack-bag',text:'Daypack for daily excursions',hint:''},
-    {id:'pack-adapter',text:'Type J power adapter',hint:'Switzerland uses Type J — Type C plugs fit but feel loose'},
-    {id:'pack-power',text:'Phone + power bank + USB-C/Lightning cables',hint:''},
-    {id:'pack-camera',text:'Camera + spare battery + memory card',hint:''},
-    {id:'pack-bottle',text:'Reusable water bottle',hint:'tap water is excellent everywhere in Switzerland'}]},
-  { title:'📱 Apps & Digital', items:[
-    {id:'app-pwa',text:'This itinerary added to Home Screen',hint:'Safari → Share → Add to Home Screen'},
-    {id:'app-maps',text:'Offline Google Maps downloaded for Switzerland',hint:'Maps → profile → Offline maps → download Switzerland'},
-    {id:'app-sbb',text:'SBB Mobile app installed',hint:'live Swiss train times + cog railway timetables'},
-    {id:'app-whatsapp',text:'WhatsApp threads opened with all 3 hotels',hint:'fastest way to handle late check-in or parking'},
-    {id:'app-emergency',text:'Emergency numbers saved',hint:'112 EU-wide · 117 police · 144 medical'}]},
-  { title:'✈ Flight Day (Tue 26 May)', items:[
-    {id:'fly-checkin',text:'Emirates online check-in done 24h before',hint:''},
-    {id:'fly-airport',text:'At DXB Terminal 3 ≥3h before departure',hint:'Emirates international'},
-    {id:'fly-charge',text:'All devices fully charged + power bank topped up',hint:''},
-    {id:'fly-bottle',text:'Reusable water bottle empty for security',hint:'refill at the gate'}]}
-];
 const CATS = {
   tickets:{icon:'ticket',label:'Tickets'}, food:{icon:'food',label:'Food'}, groceries:{icon:'cart',label:'Groceries'},
   fuel:{icon:'fuel',label:'Fuel'}, parking:{icon:'parking',label:'Parking'}, hotel:{icon:'bed',label:'Hotel'},
   flight:{icon:'plane',label:'Flight'}, transport:{icon:'train',label:'Transport'}, shopping:{icon:'bag',label:'Shopping'}, other:{icon:'dots',label:'Other'}
 };
+/* Stable per-category colour for the spend donut slices (distinct, theme-friendly). */
+const CAT_COLORS = {
+  tickets:'#9a6cb0', food:'#e0723c', groceries:'#5a9e8f', fuel:'#c2503a', parking:'#6b8fd4',
+  hotel:'#3b6ea5', flight:'#c8466b', transport:'#1f2d52', shopping:'#d4a64a', other:'#8a93a8'
+};
+/* Compact money for donut badges: 4320 -> "4.32K", 1700 -> "1.7K", 8200 -> "8.2K". */
+function kCompact(v){
+  if(v>=1000){ const k=v/1000; let s = k>=100 ? Math.round(k).toString() : (k>=10 ? k.toFixed(1) : k.toFixed(2));
+    if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,''); return s+'K'; }
+  return Math.round(v).toString();
+}
 
 /* ── Inline SVG icon set (replaces emoji chrome) ──
    Stroke-based, 24×24, inherits text colour via currentColor so it adapts to
@@ -823,7 +773,6 @@ class Trip {
     if(ti < this.dayCount) return { state:'during', n:ti };
     return { state:'after' };
   }
-  isSwiss(){ return this.id === 'switzerland'; }
 }
 
 /* ─── TripStore: load/seed/persist ─── */
@@ -895,15 +844,42 @@ class TripStore {
         const pts = timeline.map(s=>s.placeQuery).filter(Boolean);
         if(pts.length>=2) routeMapUrl = 'https://www.google.com/maps/dir/' + pts.map(encodeURIComponent).join('/');
       }
+      const dLat=Number(d&&d.lat), dLon=Number(d&&d.lon);
+      const hasCentre = isFinite(dLat) && isFinite(dLon) && dLat>=-90 && dLat<=90 && dLon>=-180 && dLon<=180 && (d.lat!==undefined && d.lon!==undefined);
+      const checklist = Array.isArray(d&&d.checklist) ? d.checklist.map(c=>String(c)).filter(c=>c.trim()) : undefined;
+      const costs = Array.isArray(d&&d.costs) ? d.costs.map(x=>({ n:String(x&&x.n||'').trim(), c:Number(x&&x.c)||0 })).filter(x=>x.n) : undefined;
       return {
         title: String(d&&d.title||'Untitled day'),
         date: isDate(d&&d.date) ? d.date : undefined,
         town: (d&&typeof d.town==='string' && d.town.trim()) ? d.town.trim() : undefined,
+        lat: hasCentre ? dLat : undefined,
+        lon: hasCentre ? dLon : undefined,
         tags: Array.isArray(d&&d.tags) ? d.tags.map(String) : [],
         routeMapUrl,
-        timeline
+        timeline,
+        checklist: (checklist && checklist.length) ? checklist : undefined,
+        costs: costs ? costs : undefined
       };
     }) : [];
+    const hotels = Array.isArray(obj.hotels) ? obj.hotels.map(h=>({
+      nights: String(h&&h.nights||'').trim(),
+      name:   String(h&&h.name||'').trim(),
+      loc:    String(h&&h.loc||'').trim(),
+      url:    (h&&typeof h.url==='string' && /^https?:\/\//i.test(h.url)) ? h.url.trim() : ''
+    })).filter(h=>h.name) : [];
+    const bookings = Array.isArray(obj.bookings) ? obj.bookings.map(b=>({
+      ico:   String(b&&b.ico||'').trim(),
+      label: String(b&&b.label||'').trim(),
+      url:   (b&&typeof b.url==='string' && /^https?:\/\//i.test(b.url)) ? b.url.trim() : ''
+    })).filter(b=>b.label && b.url) : [];
+    const prep = Array.isArray(obj.prep) ? obj.prep.map(sec=>({
+      title: String(sec&&sec.title||'').trim(),
+      items: Array.isArray(sec&&sec.items) ? sec.items.map((it,k)=>({
+        id:   String(it&&it.id||'').trim() || ('item-'+k),
+        text: String(it&&it.text||'').trim(),
+        hint: String(it&&it.hint||'').trim()
+      })).filter(it=>it.text) : []
+    })).filter(sec=>sec.title && sec.items.length) : [];
     return {
       id, name,
       tagline: String(obj.tagline||'').trim(),
@@ -913,6 +889,9 @@ class TripStore {
       homeCurrency: String(obj.homeCurrency||'AED'),
       budget: Number(obj.budget)||0,
       tags: Array.isArray(obj.tags) ? obj.tags.map(String) : [],
+      hotels,
+      bookings,
+      prep,
       days
     };
   }
@@ -1020,8 +999,10 @@ class Router {
       outlet.innerHTML = '';
       outlet.appendChild(node);
     }
-    if(keepScroll) window.scrollTo(0, prevY);
-    else window.scrollTo(0,0);
+    // Snap to top instantly on a fresh page (html has scroll-behavior:smooth,
+    // which would otherwise animate the jump).
+    if(keepScroll) window.scrollTo({ top: prevY, left: 0, behavior: 'instant' });
+    else window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     this.current = view;
     this.app.applyChrome(view);
     try{ view.mount(); }catch(e){ console.error(e); }
@@ -1085,7 +1066,7 @@ class OverviewView extends View {
     const budgetCard = budget ? `
       <div class="card pad" style="margin-top:14px">
         <div class="row between"><div class="eyebrow">Budget</div><div class="muted" style="font-size:12px">${pct}% used</div></div>
-        <div class="row between" style="margin:6px 0 9px"><strong style="font-size:20px;font-family:'Cormorant Garamond',serif;color:var(--navy-text)">${fmtMoney(spent,t.homeCurrency)}</strong><span class="muted" style="font-size:13px">of ${fmtMoney(budget,t.homeCurrency)}</span></div>
+        <div class="row between" style="margin:6px 0 9px"><strong style="font-size:20px;font-family:'DM Sans',system-ui,sans-serif;color:var(--navy-text)">${fmtMoney(spent,t.homeCurrency)}</strong><span class="muted" style="font-size:13px">of ${fmtMoney(budget,t.homeCurrency)}</span></div>
         <div class="meter"><i style="width:${pct}%"></i></div>
       </div>` : '';
 
@@ -1102,29 +1083,28 @@ class OverviewView extends View {
           <div class="dr-chev">›</div></a>`;
     }
 
-    // tiles
-    const tile = (href,ico,title,sub)=>`<a class="tile" href="${href}"><div class="tile-ico">${ico}</div><div class="tile-title">${title}</div><div class="tile-sub">${sub}</div></a>`;
+    // Pre-Departure entry — kept because it isn't in the bottom tab bar (the old
+    // 'Plan' tile grid duplicated tabs we already have, so it was dropped).
     const base = `#/trip/${esc(t.id)}`;
-    const tiles = `<div class="section-head"><h2>Plan</h2></div>
-      <div class="tiles stagger">
-        ${tile(base+'/days',svg('calendar'),'Day by Day',t.dayCount+' days planned')}
-        ${tile(base+'/map',svg('map'),'Route Map','See every stop')}
-        ${tile(base+'/currency',svg('exchange'),'Currency','Live converter')}
-        ${tile(base+'/spend',svg('card'),'Spending',budget?fmtMoney(spent,t.homeCurrency)+' spent':'Track expenses')}
-        ${t.isSwiss()?tile(base+'/prep',svg('briefcase'),'Pre-Departure','Checklist'):''}
-      </div>`;
+    const prep = (Array.isArray(t.prep) && t.prep.length) ? `<div class="section-head"><h2>Before you go</h2></div>
+      <div class="tiles"><a class="tile" style="grid-column:1/-1" href="${base}/prep"><div class="tile-ico">${svg('briefcase')}</div><div class="tile-title">Pre-Departure</div><div class="tile-sub">Packing &amp; documents checklist</div></a></div>` : '';
 
-    // hotels + bookings (swiss)
+    // hotels + book-in-advance chips, both driven by the trip's own data
     let extras = '';
-    if(t.isSwiss()){
+    const hotels = Array.isArray(t.hotels) ? t.hotels : [];
+    if(hotels.length){
       extras += `<div class="section-head"><h2>Your Hotels</h2></div><div class="stagger" style="display:grid;gap:10px">` +
-        HOTELS.map(ho=>`<div class="card pad"><div class="eyebrow">${esc(ho.nights)}</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--navy-text);margin-top:2px">${esc(ho.name)}</div>
-          <div class="muted" style="font-size:13px">${esc(ho.loc)}</div>
-          <a class="btn ghost" style="margin-top:10px" href="${ho.url}" target="_blank" rel="noopener">Book / View</a></div>`).join('') + `</div>`;
-      extras += `<div class="section-head"><h2>Book in Advance</h2></div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px">` +
-        BOOKINGS.map(b=>`<a class="chip" href="${b.url}" target="_blank" rel="noopener"><span>${b.ico}</span> ${esc(b.label)}</a>`).join('') + `</div>`;
+        hotels.map(ho=>`<div class="card pad">${ho.nights?`<div class="eyebrow">${esc(ho.nights)}</div>`:''}
+          <div style="font-family:'DM Sans',system-ui,sans-serif;font-size:20px;font-weight:600;color:var(--navy-text);margin-top:2px">${esc(ho.name)}</div>
+          ${ho.loc?`<div class="muted" style="font-size:13px">${esc(ho.loc)}</div>`:''}
+          ${ho.url?`<a class="btn ghost" style="margin-top:10px" href="${esc(ho.url)}" target="_blank" rel="noopener">Book / View</a>`:''}</div>`).join('') + `</div>`;
+    }
+    const bookings = Array.isArray(t.bookings) ? t.bookings : [];
+    if(bookings.length){
+      extras += `<div class="section-head"><h2>Book in Advance</h2></div><div class="book-grid stagger">` +
+        bookings.map(b=>`<a class="book-card" href="${esc(b.url)}" target="_blank" rel="noopener">
+          <div class="bk-ic">${esc(b.ico||'🎟')}</div>
+          <div class="bk-body"><div class="bk-label">${esc(b.label)}</div><div class="bk-sub">Book ↗</div></div></a>`).join('') + `</div>`;
     }
 
     return `<div class="hero-card view-anim-fade">
@@ -1138,9 +1118,9 @@ class OverviewView extends View {
         <div class="hero-sub">${this.app.fmtRange(t)}</div>
         <div class="hero-pills">${heroPills}</div>
       </div>
-      ${budgetCard}
       ${nextCard}
-      ${tiles}
+      ${budgetCard}
+      ${prep}
       ${extras}`;
   }
 }
@@ -1181,8 +1161,7 @@ class DayDetailView extends View {
     if(this.trip && this.trip.days[this.idx]) app.setLastDay(p.id, this.idx); }
   render(){
     const t = this.trip; if(!t || !t.days[this.idx]) return this.app.notFound();
-    const i = this.idx, d = t.days[i], swiss = t.isSwiss(), ed = this.edit;
-    const stops = swiss ? (STOPS[i]||[]) : [];
+    const i = this.idx, d = t.days[i], ed = this.edit;
     const tl = d.timeline.map((s,j)=>{
       const label = s.placeQuery ? `<a class="dest" href="${gmaps(s.placeQuery)}" target="_blank" rel="noopener">${esc(s.label)}</a>` : esc(s.label);
       const note = s.note ? `<div class="tl-note">${esc(s.note)}</div>` : '';
@@ -1190,19 +1169,21 @@ class DayDetailView extends View {
       const editBtns = ed ? `<div class="stop-edit"><button class="mini-btn" data-edit-stop="${j}">Edit</button><button class="mini-btn del" data-del-stop="${j}">Delete</button></div>` : '';
       return `<div class="tl-item ${esc(s.kind||'normal')}">
         <div class="tl-time">${esc(s.time||'')}</div><div class="tl-dot"></div>
-        <div class="tl-body"><div class="tl-label">${label}</div>${note}${book}${this._pills(swiss ? stops[j] : s.stopInfo)}${editBtns}</div></div>`;
+        <div class="tl-body"><div class="tl-label">${label}</div>${note}${book}${this._pills(s.stopInfo)}${editBtns}</div></div>`;
     }).join('');
     const addStop = ed ? `<button class="add-stop-btn" id="addStopBtn">＋ Add stop</button>` : '';
 
-    // cost row
+    // cost row — shown when the day declares a `costs` array (per-person amounts in baseCurrency)
     let cost = '';
-    if(swiss){
-      const items = DAY_COSTS[i] || [];
-      const rate = this.app.fx.rates.AED || 4.67;
+    if(Array.isArray(d.costs)){
+      const items = d.costs;
+      const cur = t.baseCurrency || 'CHF';
+      const ppl = t.travelers || 1;
       if(items.length){
-        const total = items.reduce((a,x)=>a + x.c*2, 0);
-        const aed = Math.round(total*rate);
-        cost = `<div class="block"><h4>Day cost · 2 people</h4><div class="cost-row"><span class="cost-bits">${items.map(x=>esc(x.n)).join(' · ')}</span><strong>CHF ${total.toFixed(0)} <span class="muted" style="font-weight:400;font-size:11px">≈ ${aed} AED</span></strong></div></div>`;
+        const total = items.reduce((a,x)=>a + (Number(x.c)||0)*ppl, 0);
+        const home = this.app.fx.convert(total, cur, t.homeCurrency);
+        const homeStr = (home!=null && t.homeCurrency && t.homeCurrency!==cur) ? ` <span class="muted" style="font-weight:400;font-size:11px">≈ ${Math.round(home)} ${esc(t.homeCurrency)}</span>` : '';
+        cost = `<div class="block"><h4>Day cost · ${ppl} ${ppl===1?'person':'people'}</h4><div class="cost-row"><span class="cost-bits">${items.map(x=>esc(x.n)).join(' · ')}</span><strong>${esc(cur)} ${total.toFixed(0)}${homeStr}</strong></div></div>`;
       } else {
         cost = `<div class="block"><h4>Day cost</h4><div class="cost-row"><span class="cost-bits">No paid attractions today</span><strong>—</strong></div></div>`;
       }
@@ -1210,15 +1191,16 @@ class DayDetailView extends View {
 
     // checklist
     let check = '';
-    if(swiss && (CHECKLISTS[i]||[]).length){
+    const checklist = Array.isArray(d.checklist) ? d.checklist : [];
+    if(checklist.length){
       const saved = Storage.getJSON('chk_'+t.id+'_'+i, []);
       check = `<div class="block"><h4>Checklist</h4><div id="dayChecklist">` +
-        CHECKLISTS[i].map((c,k)=>`<label class="check-row${saved.includes(k)?' done':''}" data-k="${k}"><input type="checkbox" ${saved.includes(k)?'checked':''}><span class="ct">${esc(c)}</span></label>`).join('') +
+        checklist.map((c,k)=>`<label class="check-row${saved.includes(k)?' done':''}" data-k="${k}"><input type="checkbox" ${saved.includes(k)?'checked':''}><span class="ct">${esc(c)}</span></label>`).join('') +
         `</div><div class="muted" style="font-size:10.5px;margin-top:6px">Saved on this device only</div></div>`;
     }
 
     const driveBtn = d.routeMapUrl ? `<a class="btn" href="${esc(d.routeMapUrl)}" target="_blank" rel="noopener">${svg('compass')} Driving route</a>` : '';
-    const hasGeo = swiss ? !!STOP_GEO[i] : d.timeline.some(s=>typeof s.lat==='number' && typeof s.lon==='number');
+    const hasGeo = d.timeline.some(s=>typeof s.lat==='number' && typeof s.lon==='number');
     const stopsBtn = hasGeo ? `<a class="btn ghost" href="#/trip/${esc(t.id)}/map/${i+1}">${svg('map')} This day's stops</a>` : '';
     const route = (driveBtn||stopsBtn) ? `<div class="btn-row">${driveBtn}${stopsBtn}</div>` : '';
 
@@ -1228,6 +1210,7 @@ class DayDetailView extends View {
 
     const editToolbar = ed ? `<div class="edit-toolbar">
         <button class="btn sm" id="editDayBtn">${svg('pencil')} Edit day details</button>
+        <button class="btn sm" id="dayJsonBtn">${svg('code')} Edit JSON</button>
         <button class="btn sm danger" id="delDayBtn">${svg('trash')} Delete day</button>
       </div>` : '';
 
@@ -1282,6 +1265,10 @@ class DayDetailView extends View {
       if(res==='deleted'){ this.app.router.go('/trip/'+t.id+'/days'); return; }
       this.trip=this.app.store.get(t.id); this._rerender();
     }));
+    const dayJson=$('#dayJsonBtn',this.el);
+    dayJson && dayJson.addEventListener('click', ()=>this.app.openDayJsonEditor(t, this.idx, ()=>{
+      this.trip=this.app.store.get(t.id); this._rerender();
+    }));
     const delDay=$('#delDayBtn',this.el);
     delDay && delDay.addEventListener('click', ()=>{
       if(!confirm('Delete day '+(this.idx+1)+'?')) return;
@@ -1316,23 +1303,21 @@ class MapView extends View {
     if(this.focus!=null && this.trip && this.trip.days[this.focus]) app.setLastDay(p.id, this.focus);
     else if(this.focus==null) app.clearLastDay(p.id); // full route view pins no day
   }
-  /* Stops of day f that have coordinates (Swiss: curated STOP_GEO; others: stop.lat/lon). */
+  /* Stops of day f that carry coordinates (stop.lat/lon). */
   _dayStops(f){
     const t=this.trip, d=t.days[f]; if(!d) return [];
-    const swiss=t.isSwiss(), geo = swiss ? (STOP_GEO[f]||[]) : null;
-    return d.timeline.map((s,si)=>{
-      let lat, lon;
-      if(swiss){ if(geo[si]){ lat=geo[si][0]; lon=geo[si][1]; } }
-      else if(typeof s.lat==='number' && typeof s.lon==='number'){ lat=s.lat; lon=s.lon; }
-      return (lat!=null && lon!=null) ? { lat, lon, time:s.time, label:s.label, kind:s.kind } : null;
+    return d.timeline.map(s=>{
+      return (typeof s.lat==='number' && typeof s.lon==='number')
+        ? { lat:s.lat, lon:s.lon, time:s.time, label:s.label, kind:s.kind } : null;
     }).filter(Boolean);
   }
-  /* One representative point for day f (for the whole-trip overview). */
+  /* One representative point for day f (for the whole-trip overview).
+     Prefer the day's own centre (lat/lon/town), else fall back to its first located stop. */
   _dayPoint(f){
-    const t=this.trip;
-    if(t.isSwiss() && DAY_META[f]) return { lat:DAY_META[f].lat, lon:DAY_META[f].lon, town:DAY_META[f].town };
+    const t=this.trip, d=t.days[f];
+    if(d && typeof d.lat==='number' && typeof d.lon==='number') return { lat:d.lat, lon:d.lon, town:d.town||'' };
     const s=this._dayStops(f)[0];
-    return s ? { lat:s.lat, lon:s.lon, town:(t.days[f] && t.days[f].town)||'' } : null;
+    return s ? { lat:s.lat, lon:s.lon, town:(d && d.town)||'' } : null;
   }
   _mappableDays(){ return this.trip.days.map((d,i)=>this._dayPoint(i)?i:-1).filter(i=>i>=0); }
   render(){
@@ -1477,14 +1462,10 @@ class SpendView extends View {
   render(){
     const t=this.trip; if(!t) return this.app.notFound();
     const exp=this.app.expensesFor(t.id);
-    const spent=this.app.spentHome(t,exp), budget=t.budget||0;
-    const pct=budget?Math.min(100,Math.round(spent/budget*100)):0;
-    const remain=budget-spent;
+    const spent=this.app.spentHome(t,exp);
     // categories
     const sums={}; exp.forEach(e=>{ const v=this.app.fx.convert(e.amt,e.cur,t.homeCurrency)||0; sums[e.cat]=(sums[e.cat]||0)+v; });
     const catRows=Object.keys(sums).sort((a,b)=>sums[b]-sums[a]);
-    const max=catRows.length?sums[catRows[0]]:1;
-    const cats = catRows.map(c=>`<div class="cat-bar-row"><span style="font-size:17px">${svg((CATS[c]||CATS.other).icon)}</span><div class="cat-bar"><i style="width:${Math.round(sums[c]/max*100)}%"></i></div><span>${fmtMoney(sums[c],t.homeCurrency)}</span></div>`).join('');
     const sorted = exp.slice().sort(this.app._expCmp);
     const list = sorted.length ? sorted.map(e=>{
       const c=CATS[e.cat]||CATS.other;
@@ -1497,13 +1478,68 @@ class SpendView extends View {
         <button class="exp-del" data-del="${e.id}" aria-label="Delete">×</button></div>`;
     }).join('') : `<div class="empty" style="padding:30px 10px"><div class="e-ico">${svg('card')}</div><h3>No expenses yet</h3><p>Tap + to log your first one.</p></div>`;
 
+    // Category donut: each slice is one spending category, sized by its share of
+    // the total. Animates the slices drawing in on a real visit, but renders them
+    // already-drawn on a silent in-place refresh (after adding/removing an expense).
+    const R=58, SW=14, C=2*Math.PI*R;
+    let summary;
+    if(spent>0 && catRows.length){
+      // Each slice sits in a "slot" sized by its share. We draw a rounded arc
+      // centred in the slot, trimmed by GAP so a clean, even gap shows on both
+      // sides. GAP must exceed the stroke width or the round caps would touch.
+      const single = catRows.length===1;
+      const GAP = single ? 0 : SW + 6;
+      let acc=0;
+      const segs = catRows.map((c,i)=>{
+        const frac = sums[c]/spent;
+        const slot = frac*C;
+        const drawn = single ? C : Math.max(SW*0.2, slot - GAP);
+        const start = acc*C + (slot - drawn)/2;
+        const dash = `${drawn.toFixed(2)} ${(C-drawn).toFixed(2)}`;
+        acc += frac;
+        const col = CAT_COLORS[c] || CAT_COLORS.other;
+        // Render the final arc in the markup so it looks right even if the JS
+        // draw-in animation never runs; mount() rewinds then replays it.
+        return `<circle class="d-seg" cx="100" cy="100" r="${R}" stroke="${col}" stroke-dashoffset="${(-start).toFixed(2)}" stroke-dasharray="${dash}" data-dash="${dash}" style="transition-delay:${(i*0.09).toFixed(2)}s"></circle>`;
+      }).join('');
+      let accB=0;
+      const badges = catRows.map(c=>{
+        const frac = sums[c]/spent;
+        const mid = accB + frac/2; accB += frac;
+        const ang = mid*2*Math.PI, s=Math.sin(ang), co=Math.cos(ang);
+        // Each badge (neutral icon card + muted amount) sits just outside the ring,
+        // anchored on the slice's mid-angle. The amount stacks on the outward side:
+        // above the icon for upper-half slices, below it for lower-half slices.
+        const Rb = 0.96;              // badge anchor as a fraction of the half-wrap
+        const bx=(50+Rb*50*s).toFixed(2), by=(50-Rb*50*co).toFixed(2);
+        const upper = co > 0.0001;
+        const ic = (CATS[c]||CATS.other).icon;
+        const col = CAT_COLORS[c] || CAT_COLORS.other;
+        const icEl  = `<span class="db-ic" style="--seg:${col}">${svg(ic)}</span>`;
+        const lblEl = `<span class="db-lbl"><b>${t.homeCurrency}</b>${kCompact(sums[c])}</span>`;
+        return `<span class="donut-badge" style="left:${bx}%;top:${by}%">${upper?lblEl+icEl:icEl+lblEl}</span>`;
+      }).join('');
+      const amtHtml = fmtMoney(spent,t.homeCurrency).replace(/(\.\d+)$/, '<span class="dc-dec">$1</span>');
+      summary = `<div class="donut-head">
+          <div class="dc-eyebrow">Total spend</div>
+          <div class="dc-amt">${amtHtml}</div>
+        </div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="d-track" cx="100" cy="100" r="${R}"></circle>
+            ${segs}
+          </svg>
+          ${badges}
+          <div class="donut-center"><span>Spend</span></div>
+        </div>`;
+    } else {
+      summary = `<div class="eyebrow" style="text-align:center">Total spend</div>
+        <div style="font-family:'DM Sans',system-ui,sans-serif;font-size:42px;font-weight:700;color:var(--navy-text);line-height:1;margin:6px 0;text-align:center">${fmtMoney(spent,t.homeCurrency)}</div>`;
+    }
+
     return `<div class="eyebrow">${esc(t.name)}</div><div class="display" style="margin-bottom:8px">Spending</div>
-      <div class="card pad spend-summary view-anim-fade">
-        <div class="eyebrow">Total spent</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:700;color:var(--navy-text);line-height:1;margin:4px 0">${fmtMoney(spent,t.homeCurrency)}</div>
-        ${budget?`<div class="muted" style="font-size:13px">${remain>=0?fmtMoney(remain,t.homeCurrency)+' left':fmtMoney(-remain,t.homeCurrency)+' over'} of ${fmtMoney(budget,t.homeCurrency)}</div>
-        <div class="meter" style="margin-top:10px"><i style="width:${pct}%"></i></div>`:''}
-        ${cats?`<div class="spend-cats" style="margin-top:16px">${cats}</div>`:''}
+      <div class="card pad spend-summary">
+        ${summary}
       </div>
       <div class="section-head"><h2>Expenses</h2><span class="link">${exp.length} item${exp.length===1?'':'s'}</span></div>
       <div class="card pad" id="expList">${list}</div>
@@ -1511,9 +1547,23 @@ class SpendView extends View {
       <button class="fab" id="addExpBtn" aria-label="Add expense">+</button>`;
   }
   mount(){
+    // Animate the donut slices drawing in on a real visit (skipped on instant
+    // refreshes, where they were rendered already-drawn).
+    if(!this.app._instantSpend){
+      const segs=this.el.querySelectorAll('.d-seg');
+      if(segs.length){
+        const C0=(2*Math.PI*58).toFixed(2);
+        // Rewind each arc to a dot, commit it with a forced reflow, then release
+        // back to the markup's full dash so the CSS transition reliably draws it in.
+        segs.forEach(s=>{ s.style.transition='none'; s.style.strokeDasharray='0.01 '+C0; });
+        void this.el.offsetWidth;
+        requestAnimationFrame(()=>{ segs.forEach(s=>{ s.style.transition=''; s.style.strokeDasharray=s.dataset.dash; }); });
+      }
+    }
+    this.app._instantSpend=false;
     // Adding/removing an expense re-renders in place with no transition and keeps the
     // scroll position, so the list updates instantly instead of animating.
-    const refresh=()=>this.app.router.resolve({instant:true, keepScroll:true});
+    const refresh=()=>{ this.app._instantSpend=true; this.app.router.resolve({instant:true, keepScroll:true}); };
     // Portal the FAB out to <body>: a transformed ancestor (the swipe animation
     // on .view) becomes the containing block for position:fixed, which would make
     // the button shift during the transition. Keeping it on <body> keeps it steady.
@@ -1543,11 +1593,13 @@ class PrepView extends View {
   constructor(app,p){ super(app,p); this.trip = app.store.get(p.id); this.title='Pre-Departure'; this.tab='overview'; this.showBack=true; this.back='/trip/'+p.id+'/overview'; }
   render(){
     const t=this.trip; if(!t) return this.app.notFound();
+    const prep = Array.isArray(t.prep) ? t.prep : [];
+    if(!prep.length) return `<div class="empty"><div class="e-ico">${svg('briefcase')}</div><h3>No pre-departure list</h3><p>Add a <code>prep</code> section to this trip (the AI prompt can generate one) to see a packing &amp; documents checklist here.</p></div>`;
     let total=0, done=0;
-    const secs = PREP.map(sec=>{
-      const items=sec.items.map(it=>{
+    const secs = prep.map(sec=>{
+      const items=(sec.items||[]).map(it=>{
         total++; const on = Storage.get('prep_'+t.id+'_'+it.id)==='1'; if(on) done++;
-        return `<label class="check-row${on?' done':''}" data-id="${it.id}"><input type="checkbox" ${on?'checked':''}><span class="ct">${esc(it.text)}${it.hint?`<small>${esc(it.hint)}</small>`:''}</span></label>`;
+        return `<label class="check-row${on?' done':''}" data-id="${esc(it.id)}"><input type="checkbox" ${on?'checked':''}><span class="ct">${esc(it.text)}${it.hint?`<small>${esc(it.hint)}</small>`:''}</span></label>`;
       }).join('');
       return `<div class="block"><h4>${esc(sec.title)}</h4>${items}</div>`;
     }).join('');
@@ -1616,13 +1668,13 @@ class App {
     if(view.tab){
       const id = view.params.id || this.store.activeId();
       bar.classList.add('show');
-      bar.innerHTML = this._tabs(id, view.tab);
+      bar.innerHTML = this._tabs(id, view.tab, view);
     } else {
       bar.classList.remove('show'); bar.innerHTML='';
     }
     this._syncThemeIcon();
   }
-  _tabs(id, active){
+  _tabs(id, active, view){
     const t=[
       ['overview','home','Overview'],['days','calendar','Days'],['map','map','Map'],['spend','card','Spend'],['convert','exchange','Convert']
     ];
@@ -1634,6 +1686,8 @@ class App {
       route.days = 'day/'+(ld+1);
       route.map = 'map/'+(ld+1);
     }
+    // But when already inside a specific day, the Days tab goes up to the list.
+    if(view instanceof DayDetailView) route.days = 'days';
     return t.map(([key,ico,lbl])=>`<a class="tab${key===active?' active':''}" href="#/trip/${esc(id)}/${route[key]}"><span class="tab-ico">${svg(ico)}</span>${lbl}</a>`).join('');
   }
   toggleTheme(){
@@ -1699,7 +1753,7 @@ class App {
       <h3>${editing?'Edit expense':'Add expense'}</h3>
       <div class="form-grid">
         <div class="form-row"><label>Amount</label><input id="exAmt" inputmode="decimal" placeholder="0" autocomplete="off" value="${editing?esc(existing.amt):''}"></div>
-        <div class="form-row"><label>Date</label><input id="exDate" type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/yyyy" value="${esc(this.isoToDDMM(dateISO))}" autocomplete="off"></div>
+        <div class="form-row"><label>Date</label><input id="exDate" type="date" value="${esc(dateISO)}" autocomplete="off"></div>
       </div>
       <div class="form-row"><label>Currency</label><select id="exCur">${this.currencyOptions(editing?existing.cur:trip.baseCurrency)}</select></div>
       <div class="form-row"><label>Category</label><div class="cat-pick" id="exCats">${Object.keys(CATS).map(k=>`<button data-c="${k}" class="${k===cat?'sel':''}" title="${esc(CATS[k].label)}">${svg(CATS[k].icon)}</button>`).join('')}</div></div>
@@ -1715,17 +1769,12 @@ class App {
       setTimeout(done, 460);
     };
     back.addEventListener('click', close);
-    // Auto-insert slashes so the date field reads dd/mm/yyyy as you type.
+    // Native date picker on phones — value is already ISO (yyyy-mm-dd).
     const dEl=sheet.querySelector('#exDate');
-    dEl.addEventListener('input', ()=>{
-      const v=dEl.value.replace(/[^\d]/g,'').slice(0,8);
-      dEl.value = v.length>=5 ? v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4)
-               : v.length>=3 ? v.slice(0,2)+'/'+v.slice(2) : v;
-    });
     sheet.querySelector('#exCats').addEventListener('click', e=>{ const b=e.target.closest('[data-c]'); if(!b) return; cat=b.dataset.c; $$('#exCats button',sheet).forEach(x=>x.classList.toggle('sel',x===b)); });
     sheet.querySelector('#exSave').addEventListener('click', ()=>{
       const amt=parseFloat(sheet.querySelector('#exAmt').value); if(!amt||amt<=0){ toast('Enter an amount'); return; }
-      const date=this.ddmmToISO(dEl.value); if(!date){ toast('Enter the date as dd/mm/yyyy'); return; }
+      const date=dEl.value; if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){ toast('Pick a date'); return; }
       const cur=sheet.querySelector('#exCur').value, note=sheet.querySelector('#exNote').value.trim();
       const arr=this.expensesFor(trip.id);
       if(editing){
@@ -1880,7 +1929,7 @@ class App {
       <button class="btn ghost block" id="impCopyPrompt" style="margin-bottom:12px">${svg('copy')} Copy AI prompt</button>
       <div class="form-row"><label>JSON file</label><input id="impFile" type="file" accept="application/json,.json"></div>
       <textarea id="impText" placeholder='{ "name": "My Trip", "startDate": "2026-01-01", ... }'></textarea>
-      <div class="sheet-actions"><button class="btn ghost" id="impCancel">Cancel</button><button class="btn block" id="impGo">Import</button></div>`);
+      <div class="sheet-actions"><button class="btn ghost block" id="impCancel">Cancel</button><button class="btn block" id="impGo">Import</button></div>`);
     ui.$('#impCopyPrompt').addEventListener('click', ()=>{
       fetch('./AI_JSON_GUIDE.md').then(r=>{ if(!r.ok) throw 0; return r.text(); })
         .then(txt=>this.copyText(txt).then(()=>toast('AI prompt copied — paste it into any AI')))
@@ -1928,7 +1977,7 @@ class App {
         <div class="form-row"><label>Home currency</label><select id="tfHome">${this.currencyOptions(d.homeCurrency||'AED')}</select></div>
       </div>
       ${editing?'':'<div class="hint">A blank day will be created for each date in the range — you can edit them afterwards.</div>'}
-      <div class="sheet-actions"><button class="btn ghost" id="tfCancel">Cancel</button><button class="btn block" id="tfSave">${editing?'Save changes':'Create trip'}</button></div>`);
+      <div class="sheet-actions"><button class="btn ghost block" id="tfCancel">Cancel</button><button class="btn block" id="tfSave">${editing?'Save changes':'Create trip'}</button></div>`);
     ui.$('#tfCancel').addEventListener('click', ()=>{ ui.close(); if(onCancel) onCancel(); });
     // Auto-insert slashes so the field reads dd/mm/yyyy as you type.
     const maskDate=(el)=>el.addEventListener('input', ()=>{
@@ -1988,7 +2037,6 @@ class App {
       else if(a==='export'){ ui.close(); this.exportTrip(trip); }
       else if(a==='active'){ this.store.setActive(trip.id); ui.close(); toast(trip.name+' is now active'); this.router.resolve(); }
       else if(a==='delete'){
-        if(trip.isSwiss() && !confirm('Delete the built-in Switzerland itinerary? You can restore it later by clearing app data.')) return;
         if(!confirm('Delete "'+trip.name+'"? This removes its days and expenses on this device.')) return;
         this.store.remove(trip.id); ui.close(); toast('Trip deleted'); this.router.go('/trips');
       }
@@ -2003,7 +2051,7 @@ class App {
       <div class="hint">Edit this itinerary's raw data. The <code>id</code> is kept fixed so your expenses and checklist stay attached. Invalid JSON won't be saved.</div>
       <button class="btn ghost block" id="jeCopy" style="margin-bottom:12px">${svg('copy')} Copy JSON</button>
       <textarea id="jeText" spellcheck="false" autocapitalize="off" autocomplete="off" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;min-height:46vh;white-space:pre"></textarea>
-      <div class="sheet-actions"><button class="btn ghost" id="jeCancel">Cancel</button><button class="btn block" id="jeSave">Save changes</button></div>`);
+      <div class="sheet-actions"><button class="btn ghost block" id="jeCancel">Cancel</button><button class="btn block" id="jeSave">Save changes</button></div>`);
     ui.$('#jeText').value = JSON.stringify(data, null, 2);
     ui.$('#jeCopy').addEventListener('click', ()=> this.copyText(ui.$('#jeText').value).then(()=>toast('JSON copied')).catch(()=>toast('Copy failed')) );
     ui.$('#jeCancel').addEventListener('click', ()=>{ ui.close(); if(onCancel) onCancel(); });
@@ -2018,6 +2066,30 @@ class App {
     setTimeout(()=>ui.$('#jeText').focus(), 80);
   }
 
+  /* ── Edit a single day's raw JSON directly ── */
+  openDayJsonEditor(trip, idx, onDone){
+    const data=this.store.trips[trip.id];
+    if(!data || !data.days || !data.days[idx]){ toast('Day not found'); return; }
+    const ui=this.sheet(`
+      <h3>Edit day ${idx+1} JSON</h3>
+      <div class="hint">Edit just this day's raw data — <code>title</code>, <code>date</code>, <code>tags</code> and <code>timeline</code>. Invalid JSON won't be saved.</div>
+      <button class="btn ghost block" id="djCopy" style="margin-bottom:12px">${svg('copy')} Copy JSON</button>
+      <textarea id="djText" spellcheck="false" autocapitalize="off" autocomplete="off" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;min-height:46vh;white-space:pre"></textarea>
+      <div class="sheet-actions"><button class="btn ghost block" id="djCancel">Cancel</button><button class="btn block" id="djSave">Save changes</button></div>`);
+    ui.$('#djText').value = JSON.stringify(data.days[idx], null, 2);
+    ui.$('#djCopy').addEventListener('click', ()=> this.copyText(ui.$('#djText').value).then(()=>toast('JSON copied')).catch(()=>toast('Copy failed')) );
+    ui.$('#djCancel').addEventListener('click', ui.close);
+    ui.$('#djSave').addEventListener('click', ()=>{
+      let obj; try{ obj=JSON.parse(ui.$('#djText').value); }catch(e){ toast('That isn\'t valid JSON'); return; }
+      if(!obj || typeof obj!=='object' || Array.isArray(obj)){ toast('A day must be a JSON object'); return; }
+      if(!obj.title || !String(obj.title).trim()){ toast('Day needs a title'); return; }
+      if(!Array.isArray(obj.timeline)) obj.timeline = Array.isArray(obj.timeline) ? obj.timeline : [];
+      data.days[idx]=obj; this.store.save();
+      ui.close(); toast('Day updated'); onDone && onDone(idx);
+    });
+    setTimeout(()=>ui.$('#djText').focus(), 80);
+  }
+
   /* ── Add / edit / delete a day ── */
   openDayForm(trip, idx, onDone){
     const editing = idx!=null;
@@ -2029,7 +2101,7 @@ class App {
       <div class="form-row"><label>Date</label><input id="dfDate" type="date" value="${esc(day.date||'')}"></div>
       <div class="form-row"><label>Tags (comma separated)</label><input id="dfTags" value="${esc((day.tags||[]).join(', '))}" placeholder="e.g. 🚄 Travel, 🏯 Sightseeing" autocomplete="off"></div>
       <div class="sheet-actions">
-        ${editing?'<button class="btn danger" id="dfDelete">Delete</button>':'<button class="btn ghost" id="dfCancel">Cancel</button>'}
+        ${editing?'<button class="btn danger block" id="dfDelete">Delete</button>':'<button class="btn ghost block" id="dfCancel">Cancel</button>'}
         <button class="btn block" id="dfSave">${editing?'Save':'Add day'}</button>
       </div>`);
     const cancel=ui.$('#dfCancel'); cancel && cancel.addEventListener('click', ui.close);
@@ -2070,7 +2142,7 @@ class App {
         <div class="form-row"><label>Booking URL (optional)</label><input id="sfBookUrl" value="${esc(s.bookLink&&s.bookLink.url||'')}" placeholder="https://…" autocomplete="off"></div>
       </div>
       <div class="sheet-actions">
-        ${editing?'<button class="btn danger" id="sfDelete">Delete</button>':'<button class="btn ghost" id="sfCancel">Cancel</button>'}
+        ${editing?'<button class="btn danger block" id="sfDelete">Delete</button>':'<button class="btn ghost block" id="sfCancel">Cancel</button>'}
         <button class="btn block" id="sfSave">${editing?'Save':'Add stop'}</button>
       </div>`);
     const cancel=ui.$('#sfCancel'); cancel && cancel.addEventListener('click', ui.close);
@@ -2103,6 +2175,16 @@ window.__showUpdateBanner = function(reg){
 const app = new App();
 window.__app = app;
 app.start();
+
+// Tap-away to dismiss: tapping outside a focused field blurs it (hides the
+// keyboard / clears the focus ring) instead of leaving it stuck active.
+document.addEventListener('pointerdown', e=>{
+  const a=document.activeElement;
+  if(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) &&
+     !e.target.closest('input,textarea,select,label,button,.key,.chip')){
+    a.blur();
+  }
+}, true);
 </script>
 
 <script>

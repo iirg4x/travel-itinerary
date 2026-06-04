@@ -6,7 +6,7 @@
    - Everything else (third-party links etc.): pass-through.
    Bump SHELL_CACHE version when you change the HTML/CSS/JS to force clients to refresh.
 */
-const SHELL_CACHE = 'swiss-shell-v57';
+const SHELL_CACHE = 'swiss-shell-v68';
 const RUNTIME_CACHE = 'swiss-runtime-v1';
 
 const SHELL_ASSETS = [
@@ -18,7 +18,7 @@ const SHELL_ASSETS = [
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
   './icons/favicon-32.png',
-  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap'
+  'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap'
 ];
 
 const LIVE_HOSTS = [
