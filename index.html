@@ -288,8 +288,8 @@
   .donut-head .dc-amt .dc-dec { font-size: .58em; color: var(--text-muted); font-weight: 600; }
   .donut-wrap { position: relative; width: 100%; max-width: 240px; aspect-ratio: 1 / 1; margin: 22px auto 16px; }
   .donut { width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
-  .donut .d-track { fill: none; stroke: var(--card-soft); stroke-width: 14; }
-  .donut .d-seg { fill: none; stroke-width: 14; stroke-linecap: round;
+  .donut .d-track { fill: none; stroke: var(--card-soft); stroke-width: 9; }
+  .donut .d-seg { fill: none; stroke-width: 9; stroke-linecap: round;
     transition: stroke-dasharray 1s var(--ease); }
   .donut-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
   .donut-center span { font-family: 'DM Sans', system-ui, sans-serif; font-size: 24px; font-weight: 700; color: var(--navy-text); letter-spacing: -.01em; }
@@ -1465,7 +1465,27 @@ class SpendView extends View {
     const spent=this.app.spentHome(t,exp);
     // categories
     const sums={}; exp.forEach(e=>{ const v=this.app.fx.convert(e.amt,e.cur,t.homeCurrency)||0; sums[e.cat]=(sums[e.cat]||0)+v; });
-    const catRows=Object.keys(sums).sort((a,b)=>sums[b]-sums[a]);
+    // Donut aggregation: fold categories too small to render a legible arc into a
+    // single "Other" slice so tiny adjacent slices don't crowd their icons. The
+    // expense list below still lists every expense under its real category.
+    const dsums = (()=>{
+      const MIN_FRAC = 0.05;            // < 5% of total spend → too small to stand alone
+      const big = {}, small = []; let otherReal = 0;
+      Object.keys(sums).forEach(c=>{
+        if(c==='other') otherReal += sums[c];
+        else if(spent>0 && sums[c] < spent*MIN_FRAC) small.push(c);
+        else big[c] = sums[c];
+      });
+      let otherSum = otherReal;
+      // Only collapse into "Other" when it merges ≥2 things (or joins an existing
+      // Other); a lone small category with no Other keeps its own identity.
+      if(small.length>=2 || (small.length>=1 && otherReal>0)) small.forEach(c=> otherSum += sums[c]);
+      else small.forEach(c=> big[c] = sums[c]);
+      const m = Object.assign({}, big);
+      if(otherSum>0) m.other = otherSum;
+      return m;
+    })();
+    const dRows = Object.keys(dsums).sort((a,b)=>dsums[b]-dsums[a]);
     const sorted = exp.slice().sort(this.app._expCmp);
     const list = sorted.length ? sorted.map(e=>{
       const c=CATS[e.cat]||CATS.other;
@@ -1481,17 +1501,17 @@ class SpendView extends View {
     // Category donut: each slice is one spending category, sized by its share of
     // the total. Animates the slices drawing in on a real visit, but renders them
     // already-drawn on a silent in-place refresh (after adding/removing an expense).
-    const R=58, SW=14, C=2*Math.PI*R;
+    const R=58, SW=9, C=2*Math.PI*R;
     let summary;
-    if(spent>0 && catRows.length){
+    if(spent>0 && dRows.length){
       // Each slice sits in a "slot" sized by its share. We draw a rounded arc
       // centred in the slot, trimmed by GAP so a clean, even gap shows on both
       // sides. GAP must exceed the stroke width or the round caps would touch.
-      const single = catRows.length===1;
-      const GAP = single ? 0 : SW + 6;
+      const single = dRows.length===1;
+      const GAP = single ? 0 : SW + 16;
       let acc=0;
-      const segs = catRows.map((c,i)=>{
-        const frac = sums[c]/spent;
+      const segs = dRows.map((c,i)=>{
+        const frac = dsums[c]/spent;
         const slot = frac*C;
         const drawn = single ? C : Math.max(SW*0.2, slot - GAP);
         const start = acc*C + (slot - drawn)/2;
@@ -1502,21 +1522,23 @@ class SpendView extends View {
         // draw-in animation never runs; mount() rewinds then replays it.
         return `<circle class="d-seg" cx="100" cy="100" r="${R}" stroke="${col}" stroke-dashoffset="${(-start).toFixed(2)}" stroke-dasharray="${dash}" data-dash="${dash}" style="transition-delay:${(i*0.09).toFixed(2)}s"></circle>`;
       }).join('');
+      // Anchor each badge on its slice's true mid-angle. Folding tiny categories
+      // into "Other" above keeps every slice big enough that the icons sit clear
+      // of one another, so no angular spreading is needed.
       let accB=0;
-      const badges = catRows.map(c=>{
-        const frac = sums[c]/spent;
+      const badges = dRows.map((c,i)=>{
+        const frac = dsums[c]/spent;
         const mid = accB + frac/2; accB += frac;
         const ang = mid*2*Math.PI, s=Math.sin(ang), co=Math.cos(ang);
-        // Each badge (neutral icon card + muted amount) sits just outside the ring,
-        // anchored on the slice's mid-angle. The amount stacks on the outward side:
-        // above the icon for upper-half slices, below it for lower-half slices.
-        const Rb = 0.96;              // badge anchor as a fraction of the half-wrap
+        // The icon card sits just outside the ring on the slice mid-angle; the
+        // amount stacks outward — above for upper-half slices, below for lower.
+        const Rb = 1.02;             // badge anchor as a fraction of the half-wrap
         const bx=(50+Rb*50*s).toFixed(2), by=(50-Rb*50*co).toFixed(2);
         const upper = co > 0.0001;
         const ic = (CATS[c]||CATS.other).icon;
         const col = CAT_COLORS[c] || CAT_COLORS.other;
         const icEl  = `<span class="db-ic" style="--seg:${col}">${svg(ic)}</span>`;
-        const lblEl = `<span class="db-lbl"><b>${t.homeCurrency}</b>${kCompact(sums[c])}</span>`;
+        const lblEl = `<span class="db-lbl"><b>${t.homeCurrency}</b>${kCompact(dsums[c])}</span>`;
         return `<span class="donut-badge" style="left:${bx}%;top:${by}%">${upper?lblEl+icEl:icEl+lblEl}</span>`;
       }).join('');
       const amtHtml = fmtMoney(spent,t.homeCurrency).replace(/(\.\d+)$/, '<span class="dc-dec">$1</span>');
